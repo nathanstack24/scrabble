@@ -33,6 +33,9 @@ let pp_list pp_elt lst =
 
 
 (* BOARD test cases*)
+
+let board2x2 = new_board 2
+
 let make_get_x_tests  
     (name : string) 
     (square : Board.board_square) 
@@ -68,3 +71,4 @@ let make_set_occ_tests
     (expected_output : board_square) : test = 
   name >:: (fun _ -> 
       assert_equal expected_output (set_occ square tile))
+

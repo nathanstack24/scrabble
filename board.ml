@@ -48,7 +48,7 @@ let make_board_square (c:char) (p:int*char) : board_square =
   failwith "Unimplemented"
 
 let set_square (tile:tile) (pos:position) (board:t) = 
-  set_square_helper []
+  set_square_helper [] tile pos board
 
 (** [connected_to_center center_pos board] Returns a list of all of the occupied
     board_squares with a path from the center center*)
@@ -67,12 +67,40 @@ let connected_to_center (center_pos:position) (board:t)=
       bfs (neigh_list @ connected) (p::visited) t pos_list
     |{pos = p; occ = _ }::t -> bfs connected (p::visited) t pos_list
     |[] -> connected
-  in bfs [] [] ((get_square center_pos board)::[]) (List.map (fun square -> get_pos square) board)
+  in bfs [] [] ((get_square center_pos board)::[]) 
+    (List.map (fun square -> get_pos square) board)
+
+(** [first_letter_squares_pos board] returns the positions of the first letters
+    of each word on the board*)
+let first_letter_squares_pos (board:t) = 
+  let rec loop (unvisited:board_square list) (acc:position list) board= 
+    match unvisited with 
+    |[] -> []
+    |{pos=p; occ = None}::t -> loop t acc board
+    |h::t when (get_x h = 1 || get_y h = 1)-> loop t ((get_pos h)::acc) board
+    |{pos=p; occ = Some tile}::t ->  
+      let up:position = (fst p, snd p - 1) in 
+      let left:position = (fst p - 1, snd p) in 
+      if get_occ (get_square up board) = None &&
+         get_occ(get_square left board) = None then
+        loop t (p::acc) board else loop t acc board
+  in loop board [] board 
 
 
 let is_valid_board (board:t) = 
   failwith "Unimplemented"
 
-let new_board n = []
+
+(** [new_board_helper r c n] defines a new list of empty board squares with 
+    [r] rows and [c] columns. [n] = [c] allows the original value of [c] to 
+    persist and continue be used throughout the recursion*)
+let rec new_board_helper r c n: t =
+  if r = 0 then []
+  else if c = 0 then new_board_helper (r-1) n n
+  else let new_square = {pos = (c,r); occ = None} in 
+    new_square::new_board_helper r (c-1) n 
+
+let new_board n : t = 
+  new_board_helper n n n
 
 (* let rec new_board_helper acc n = ()*)

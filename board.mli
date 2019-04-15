@@ -1,4 +1,3 @@
-
 type t
 
 (** The type representing a letter tile *)
