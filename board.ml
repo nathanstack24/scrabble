@@ -28,9 +28,6 @@ let get_occ (square:board_square) =
 let set_occ (square:board_square) (tile:tile) = 
   {pos=get_pos square; occ= Some tile}
 
-let print_board (board:t) = 
-  failwith "Unimplemented"
-
 let rec get_square (pos:position) (board:t) = 
   match board with 
   | [] -> raise (InvalidPos pos)
@@ -79,12 +76,39 @@ let first_letter_squares_pos (board:t) =
     |{pos=p; occ = None}::t -> loop t acc board
     |h::t when (get_x h = 1 || get_y h = 1)-> loop t ((get_pos h)::acc) board
     |{pos=p; occ = Some tile}::t ->  
-      let up:position = (fst p, snd p - 1) in 
-      let left:position = (fst p - 1, snd p) in 
+      let up:position = (fst p, snd p + 1) in 
+      let left:position = (fst p + 1, snd p) in 
       if get_occ (get_square up board) = None &&
          get_occ(get_square left board) = None then
         loop t (p::acc) board else loop t acc board
   in loop board [] board 
+
+(** [get_board_row r board] returns all the board_squares in [board] in row 
+    [r]*)
+let get_board_row r board = 
+  let rec loop r square_list acc =
+    match square_list with 
+    |[] -> acc
+    |h::t -> if get_y h = r then (loop r t (h::acc)) else loop r t acc
+  in loop r board []
+
+(** [get_board_col c board] returns all the board_squares in [board] in column 
+    [c]*)
+let get_board_col c board = 
+  let rec loop c square_list acc = 
+    match square_list with
+    |[] -> acc
+    |h::t -> if get_x h = c then (loop c t (h::acc)) else loop c t acc
+  in loop c board []
+
+let rec find_word_row (first_letter_pos:position) (board:t)= 
+  let row_ind = snd first_letter_pos in
+  let row = get_board_row row_ind board in 
+  let col_ind = fst first_letter_pos in
+  let rec loop lst c r word = 
+    match lst with 
+    |{pos = (c, r)}
+
 
 
 let is_valid_board (board:t) = 

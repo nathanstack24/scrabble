@@ -26,7 +26,7 @@ exception MisplacedTile
 val place_tile : Board.tile -> Board.position -> curr_turn -> t
 
 (** [remove_tile p curr_turn] removes the tile at position p from the placed 
-    tiles in curr_turn *)
+    tiles in curr_turn.  *)
 val remove_tile : Board.position -> curr_turn -> t
 
 (** [end_turn] returns a new state t based on the actions performed by the 
