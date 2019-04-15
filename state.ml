@@ -90,35 +90,43 @@ let remove_tile (pos:position) (curr_turn:curr_turn) =
   failwith "unimplemented"
 
 
+(** [from_bag_to_inv bag inv] returns a tuple whose first element is a tile list
+  * representing the new tile bag and whose second element is a tile list 
+  * representing the new inventory of the current player. *)
+let rec from_bag_to_inv (bag: tile list) (inv: tile list) = 
+  let size = List.length inv in
+  if (size=7) then (bag,inv) else
+    let bag_size = List.length bag in   
+    let rand_tile = List.nth tile_bag (Random.int bag_size) in 
+    let new_tile_bag = List.filter (fun tile -> tile<>rand_tile ) bag in 
+    let new_inv = rand_tile::inv in 
+    from_bag_to_inv new_tile_bag new_inv
 
-
-(** [i -- j] is the list of integers from [i] to [j], inclusive.
-    Tail recursive. *)
-let (--) (i : int) (j : int) : int list =
-  let rec from i j l =
-    if i>j then l
-    else from i (j-1) (j::l)
-  in from i j []
-
-(** [shuffle lst] is a random permutation of [lst]. *)
-let shuffle (lst : 'a list) : 'a list =
-  QCheck.Gen.(generate1 (shuffle_l lst))
 
 (** [replenish_inventory board] returns a new board with the current player's
   * inventory of tiles updated, where the additional tiles added to that player's
   * inventory were randomly selected and removed from the tile bag *)
-let replenish_inventory (board: t) = 
+let rec replenish_inventory (board: t) : t = 
   let tile_bag = board.tile_bag in
-  let current_inventory = board.curr_turn.curr_player.inv in 
-  let size = List.length current_inventory in 
-  let int_list = 1 -- size in 
-  let shuffled = shuffle int_list in 
-  match shuffled with 
-  | [] ->
-  | h::t -> 
+  let player = board.curr_turn.curr_player in 
+  let current_inventory = player.inv in
+  let new_data = from_bag_to_inv tile_bag current_inventory in 
+  let new_bag = fst new_data in 
+  let new_inv = snd new_data in
+  let updated_player: player = {player_id = player.player_id; score = player.score;
+                                inv = new_inv;} in 
+  let players = List.filter (fun player -> player.player_id<>updated_player.player_id) board.players in 
+  let players = updated_player::player in 
+  { 
+    players = players; 
+    board = board.board;
+    curr_turn = board.curr_turn;
+    tile_bag = new_bag;
+  }
 
-    let end_turn (curr_turn:curr_turn) (curr_turn:curr_turn) = 
-      failwith "unimplemented"
+let end_turn (curr_turn:curr_turn) (curr_turn:curr_turn) = 
+  failwith "Unimplemented"
+
 
 
 
