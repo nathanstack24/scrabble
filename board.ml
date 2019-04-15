@@ -45,10 +45,30 @@ let rec set_square_helper  (acc:t) (tile:tile) (pos:position) (board:t)  =
       set_square_helper (h::acc) tile pos t
 
 let make_board_square (c:char) (p:int*char) : board_square = 
+  failwith "Unimplemented"
 
+let set_square (tile:tile) (pos:position) (board:t) = 
+  set_square_helper []
 
-  let set_square (tile:tile) (pos:position) (board:t) = 
-    set_square_helper []
+(** [connected_to_center center_pos board] Returns a list of all of the occupied
+    board_squares with a path from the center center*)
+let connected_to_center (center_pos:position) (board:t)=
+  let rec bfs (connected:position list) (visited:position list) (queue:board_square list) (pos_list:position list)= 
+    match queue with 
+    |{pos = p; occ = Some tile}::t ->
+      (* Check that there is > 0 elements within 1 square of the square
+         being visited*)
+      let neigh_list = (List.filter (fun p_neigh -> 
+          (snd p = snd p_neigh && 
+           (fst p = fst p_neigh + 1 || fst p = fst p_neigh - 1)) ||
+          (fst p = fst p_neigh && 
+           (snd p = snd p_neigh + 1 || snd p = snd p_neigh - 1 )) &&
+          List.mem p_neigh visited = false) pos_list) in 
+      bfs (neigh_list @ connected) (p::visited) t pos_list
+    |{pos = p; occ = _ }::t -> bfs connected (p::visited) t pos_list
+    |[] -> connected
+  in bfs [] [] ((get_square center_pos board)::[]) (List.map (fun square -> get_pos square) board)
+
 
 let is_valid_board (board:t) = 
   failwith "Unimplemented"

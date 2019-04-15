@@ -19,7 +19,7 @@ type t = {
 
 exception NotInInv of tile
 exception MisplacedTile
-exception Occupied
+exception NotPlaced
 
 (** [is_in_inv t curr_turn] returns whether tile is in the current player's 
     inventory*)
@@ -86,8 +86,32 @@ let place_tile (tile:tile) (pos:position) (state:t) =
   else state
 
 
-let remove_tile (pos:position) (curr_turn:curr_turn) = 
-  failwith "unimplemented"
+let remove_tile (pos:position) (board:t) = 
+  let placed_squares = board.curr_turn.new_squares in 
+  (** TODO: implement error handling with this case. Raises Not_Found if no
+      square placed by the user in this turn is located at pos *)
+  let tile = List.find (fun square -> (get_pos square) = pos) placed_squares in
+  let new_placed_squares = List.filter (fun square -> (get_pos square)<>pos) placed_squares in 
+  match (get_occ tile) with 
+  | None -> raise Not_found
+  | Some t -> let tile = t in 
+    let new_player = {
+      player_id= board.curr_turn.curr_player.player_id;
+      score= board.curr_turn.curr_player.score; 
+      inv= tile::board.curr_turn.curr_player.inv } in
+    let new_curr_turn = {
+      curr_player= new_player;
+      new_squares=new_placed_squares;} in 
+    {
+      players : player list; 
+      board : Board.t;
+      curr_turn: curr_turn;
+      tile_bag: tile list;
+    }
+
+
+
+
 
 
 (** [from_bag_to_inv bag inv] returns a tuple whose first element is a tile list
@@ -97,7 +121,7 @@ let rec from_bag_to_inv (bag: tile list) (inv: tile list) =
   let size = List.length inv in
   if (size=7) then (bag,inv) else
     let bag_size = List.length bag in   
-    let rand_tile = List.nth tile_bag (Random.int bag_size) in 
+    let rand_tile = List.nth bag (Random.int bag_size) in 
     let new_tile_bag = List.filter (fun tile -> tile<>rand_tile ) bag in 
     let new_inv = rand_tile::inv in 
     from_bag_to_inv new_tile_bag new_inv
@@ -116,7 +140,7 @@ let rec replenish_inventory (board: t) : t =
   let updated_player: player = {player_id = player.player_id; score = player.score;
                                 inv = new_inv;} in 
   let players = List.filter (fun player -> player.player_id<>updated_player.player_id) board.players in 
-  let players = updated_player::player in 
+  let players = updated_player::players in 
   { 
     players = players; 
     board = board.board;
