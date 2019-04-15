@@ -10,17 +10,37 @@ type position
 (** The type representing a location *)
 type board_square
 
-(** Raised when the user attempts to place a tile on an occupied board square *)
+(** Raised when the user attempts to place a tile on occupied [board_square] *)
 exception Occupied of board_square
+
+(** Raised when [position] is an invalid position in the board *)
+exception InvalidPos of position
+
+(** [get_x square] returns the x coordinate of the position of [square]*)
+val get_x : board_square -> int
+
+(** [get_y square] returns the y coordinate of [square]*)
+val get_y : board_square -> int
+
+(** [get_pos square] returns the position coordinate of [square]*)
+val get_pos : board_square -> position
+
+(** [get_occ] returns the tile option at [square]*)
+val get_occ : board_square -> tile option
+
+(** [set_occ] returns the tile option at [square]*)
+val set_occ : board_square -> tile -> board_square
 
 (** Takes in a board [t] and prints it to console *)
 val print_board : t -> unit
 
 (** [set_square t p b] adds tile [t] to position [p] of board [b] if that 
-    position is not occupied. If [p] is occupied, raises [Occupied] *)
+    position is not occupied, and returns a new board. If [p] is occupied, 
+    raises [Occupied] *)
 val set_square : tile -> position -> t -> t
 
-(** Gets the boardsquare at [position] in [t] *)
+(** [get_square pos board] returns the board_square at position [pos] in [t].
+  * If there exists no position [pos] in [t], raises   *)
 val get_square : position -> t -> board_square
 
 (** Returns true if all the following conditions are true, false otherwise:
@@ -40,4 +60,6 @@ val get_square : position -> t -> board_square
 *)
 val is_valid_board : t -> bool
 
-val new_board : unit -> t
+(** Return an empty board full of size [n]x[n]*)
+val new_board : int -> t
+

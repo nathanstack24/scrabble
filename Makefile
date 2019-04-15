@@ -1,7 +1,7 @@
 MODULES=board command state main 
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
-MLIS=$(MODULES:=.mli)
+MLIS=$(MODULES:=.ml
 OCAMLBUILD=ocamlbuild -use-ocamlfind
 
 default: build
