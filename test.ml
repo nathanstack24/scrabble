@@ -72,3 +72,21 @@ let make_set_occ_tests
   name >:: (fun _ -> 
       assert_equal expected_output (set_occ square tile))
 
+let make_dict_tests  
+    (name : string) 
+    (square : Board.board_square)
+    (tile : tile) 
+    (expected_output : board_square) : test = 
+  name >:: (fun _ -> 
+      assert_equal expected_output (set_occ square tile))
+
+let dictionary_tests = [
+
+
+]
+
+let suite = "Scrabble test suite" >::: List.flatten [
+    dictionary_tests;
+  ]
+
+let _ = run_test_tt_main suite
