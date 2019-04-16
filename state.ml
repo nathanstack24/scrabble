@@ -134,7 +134,7 @@ let rec replenish_inventory (board: t) : t =
     tile_bag = new_bag;
   }
 
-let end_turn (curr_turn:curr_turn) (curr_turn:curr_turn) = 
+let end_turn state = 
   failwith "Unimplemented"
 
 
