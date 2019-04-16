@@ -1,5 +1,5 @@
 
-let rec get_next_command c : Command.command = 
+let rec get_next_command player : Command.command = 
   print_endline "Your turn, [PLAYERNAME]"; (*We'll prob need to pass in players to get_next_command *)
   print_string "> ";
   match read_line () with
@@ -7,10 +7,24 @@ let rec get_next_command c : Command.command =
   | text -> 
     try Command.parse text with
     | Command.Malformed -> 
-      print_endline "Bad command. Try again"; get_next_command ()
-    | Command.Empty -> get_next_command ()
+      print_endline "Bad command. Try again"; get_next_command player
+    | Command.Empty -> get_next_command player
 
-let rec execute_command (me:State.t) = failwith "Unimplemented"
+let rec execute_command (me:State.t) : State.t = failwith "Unimplemented"
+(*
+  let p = State.curr_turn.current_player in 
+  match (get_next_command p) with 
+  | (Command.Quit) -> exit 0
+  | (Command.Place mybsquare) -> failwith "Unimplmented"(*add mybsqure to the curr_turn, if squareposition is occuied "can't place"*)
+  | (Command.Remove mybsquare) -> print_endline "Yo it ain't there" (*Remove mybsquare from curr_turn. If mybsquare not in curr_turn, *)
+  | (Command.Endturn) -> failwith "Unimplemnted" (*Check validity of word in curr_turn, if word bad then restart turn. If good, then
+                                                   set current_player <= next_player. *)
+  | (Command.Score) -> (*Print scores like this:
+                         Player1: 10
+                         Player2: 4
+                         Player3: 97*)
+*)
+(*FOR EACH CASE: At end of pattern matching, print out board, ask for next command from current_player. *)
 
 
 let main () =

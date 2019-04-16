@@ -44,7 +44,7 @@ let rec set_square_helper  (acc:t) (tile:tile) (pos:position) (board:t)  =
 let make_board_square (c:char) (row:int) (col:int) : board_square = 
   {pos=(row,col); occ=Some c}
 
-let set_square (tile:tile) (pos:position) (board:t) = 
+let set_square (tile:tile) (pos:position) (board:t): t = 
   set_square_helper [] tile pos board
 
 (** [connected_to_center center_pos board] Returns a list of all of the occupied
@@ -157,9 +157,28 @@ let word_list_from_board (board:t) =
 let is_valid_board (board:t) = 
   failwith "Unimplemented"
 
+(*Returns a string representation of a board_square that looks good for printing.*)
+let bsquare_tostring = function 
+  | Some ti -> ("|" ^ (String.make 1 ti))
+  | None -> "|#"
 
+(* Prints the given list of board_squares IN ORDER to the console. *)
+let rec print_ordered_row = function
+  | h::t -> print_string (bsquare_tostring h.occ)
+  | _ -> print_endline "|"
+
+(*Prints each of the rows on the board.
+  TODO: Ensure that the rows from [get_board_row] are ORDERED left to right.*)
+let rec print_board_helper board n rowcounter: unit = 
+  if rowcounter >= n then () 
+  else print_ordered_row (get_board_row rowcounter board); 
+  (print_board_helper board n (rowcounter+1))
+
+(*Main functionality is in helper. This simply sets the row counter to 0 and 
+  lets the helper do the main work. *)
 let print_board board : unit = 
-  failwith "Unimplemented"
+  let n = (List.length (get_board_row 0 board)) in 
+  print_board_helper board n 0
 
 (** [new_board_helper r c n] defines a new list of empty board squares with 
     [r] rows and [c] columns. [n] = [c] allows the original value of [c] to 
@@ -174,3 +193,11 @@ let new_board n : t =
   new_board_helper n n n
 
 (* let rec new_board_helper acc n = ()*)
+
+let rec merge_boards board1 board2 :t = 
+  match board1 with 
+  |[] -> board2
+  |{pos = _ ; occ= None}::t -> board2
+  |{pos = p ; occ= Some tile}::t -> 
+    if (get_square p board2) = {pos = _ ; occ = None}  then 
+      merge_boards t (set_square tile p board2) else raise InvalidPos p

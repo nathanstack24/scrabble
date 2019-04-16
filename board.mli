@@ -63,3 +63,8 @@ val is_valid_board : t -> bool
 val new_board : int -> t
 
 val make_board_square : char -> int -> int -> board_square
+
+(** [merg_boards board1 board2] adds the occupied squares in [board1] to 
+    [board2] if they are unoccupied. Requires that [board1] be a subset of 
+    [board2] *)
+val merge_boards : t -> t -> t

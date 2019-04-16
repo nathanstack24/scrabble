@@ -31,6 +31,9 @@ val remove_tile : Board.position -> t -> t
     else returns their tiles to them and resets the turn *)
 val end_turn : t -> t
 
+(** [get_scores] returns the score for each player in the game *)
+val get_scores : t -> int list
+
 
 
 

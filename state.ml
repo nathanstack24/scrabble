@@ -134,8 +134,20 @@ let rec replenish_inventory (board: t) : t =
     tile_bag = new_bag;
   }
 
+let merge_boards t =
+  let curr_board = t.curr_turn.new_squares in 
+  let merged_board = merge_boards curr_board t.board
+
+
 let end_turn state = 
-  failwith "Unimplemented"
+  failwith "unimplemented"
+
+let get_scores state = 
+  let rec loop players = 
+    match players with 
+    |[] -> []
+    |h::t -> h.score::(loop t)
+  in loop state.players
 
 
 

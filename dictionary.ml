@@ -1,16 +1,16 @@
-module Str: Set.OrderedType = struct
+module String_type: Set.OrderedType = struct
   type t = string
   let compare x y =
     String.compare x y
 end
 
-module Dict:Set.S = Set.Make(Str)
+module Dict:Set.S = Set.Make(String_type)
 
-(**[read_channel channel acc] returns a list of all lines in the text file
-       * corresponding to the input channel [channel] prepended onto string 
-       * list [acc]. Each element of [acc] corresponds to a line in the text 
-       * file that was previously read.
-       * Requires: [channel] is an in_channel, [acc] is a string list.   *)
+(** [read_channel channel acc] returns a list of all lines in the text file
+  * corresponding to the input channel [channel] prepended onto string 
+  * list [acc]. Each element of [acc] corresponds to a line in the text 
+  * file that was previously read.
+  * Requires: [channel] is an in_channel, [acc] is a string list.   *)
 let rec read_channel channel acc =
   try (
     let next_line = Pervasives.input_line channel in
@@ -33,16 +33,12 @@ let rec read_dir handle acc =
   with
     End_of_file -> Unix.closedir handle; acc
 
-(** [init_read_channel channel] is [read_channel channel [] ]. *)
-let init_read_channel channel=
-  read_channel channel []
-
 (** [extract_words line] returns a list of all words in string list [line]
   * according to the definition of a word provided in the A4 Description.
   * Requires: [line] is a string list corresponding to a line of a 
   * text file. *)
 let extract_words (line:string list) : string list = 
-  let r = Str.regexp "[A-Za-z0-9]+.*\\b" in
+  let r = Str.regexp "[A-Z]+" in
   try 
     let f = fun str -> ignore (Str.search_forward r str 0); 
       Str.matched_string str in
@@ -52,14 +48,14 @@ let extract_words (line:string list) : string list =
   | Not_found -> []
 
 (** [parse_text l] returns a string list list, where each element of the 
- * list is a list where each element of that list corresponds to a word 
- * in a given text file. 
+ * list is a list containing a single word from the Scrabble dictionary text file.
+ * 
  * Requires: [l] is a string list where each element of [l] is a string
- * corresponding to a line in a given .txt file *)
+ * corresponding to a line in the Scrabble dictionary text file *)
 let parse_text (l: string list) = 
-  let lines_and_prewords = List.map 
+  let words_list = List.map 
       (Str.split (Str.regexp "[ \n\r\x0c\t]+")) l in
-  let words = List.map extract_words lines_and_prewords in
+  let words = List.map extract_words words_list in
   words
 
 (** [add_words_to_dict list txt acc] returns an index with every word in   
@@ -105,30 +101,17 @@ let rec construct_idx txt_list words_list acc =
     construct_idx t1 t2 dict
   | _ -> failwith "Error"
 
-let index_of_dir (d:string) : idx =
+let create_dictionary (dict:string) : idx =
   try 
-    let handle = Unix.opendir (Unix.getcwd() ^ Filename.dir_sep ^ d) in
-    let files = read_dir handle [] in
-    let txts= List.filter find_txt files in
-    if txts = [] then raise Not_found
-    else
-      let txt_list = List.map String.lowercase_ascii txts in
-      let txt_list_path = List.map (fun x -> Unix.getcwd() ^ 
-                                             Filename.dir_sep ^ 
-                                             d ^ Filename.dir_sep ^ x) 
-          txt_list in 
-      let channels = List.map Pervasives.open_in txt_list_path in
-      let file_texts = List.map init_read_channel channels in             
-      let sub_strings= List.map parse_text file_texts in
-      let sum_words = List.map List.concat sub_strings in
-      let uniq_sum_words = List.map (List.sort_uniq String.compare) 
-          sum_words in
-      construct_idx txt_list uniq_sum_words Dict.empty
+    let dict_text_file = Unix.getcwd() ^ Filename.dir_sep ^ "scrabble_dict.txt" in 
+    let channel = Pervasives.open_in dict_text_file in
+    let all_words_list = read_channel channel [] in             
+    let sub_strings= parse_words all_words_list in
+    let sum_words = List.map List.concat sub_strings in
+    let uniq_sum_words = List.map (List.sort_uniq String.compare) 
+        sum_words in
+    construct_idx txt_list uniq_sum_words Dict.empty
   with 
   | t -> raise Not_found
-
-let words idx =
-  let list = Dict.to_list idx in
-  List.map (fst) list
 
 
