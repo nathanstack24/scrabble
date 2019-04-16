@@ -1,4 +1,4 @@
-open Dictionary
+
 type tile = char
 
 type position = int*int
@@ -8,7 +8,7 @@ type board_square = {
   occ : tile option
 }
 
-let dict = create_dictionary
+(*let dict = create_dictionary*)
 
 type t = board_square list
 
@@ -171,8 +171,8 @@ let word_list_from_board (board:t) =
     the English dictionary *)
 let rec are_words_valid word_list dict = 
   match word_list with 
-  | h::t -> (Dictionary.Dict.mem (String.uppercase_ascii h) dict) 
-            && are_words_valid t dict
+  | h::t -> (*(Dictionary.Dict.mem (String.uppercase_ascii h) dict) 
+              && are_words_valid t dict*) failwith "unimplemented"
   |[] -> true
 
 let is_valid_board (board:t) = 
@@ -180,7 +180,8 @@ let is_valid_board (board:t) =
   let row_num = List.length (get_board_row 1 board) in  
   let col_num = List.length (get_board_col 1 board) in 
   let center_pos = (col_num/2 + 1, row_num/2 +1 ) in
-  (are_words_valid word_list dict) && (are_connected_to_center center_pos board)
+  (*(are_words_valid word_list dict) && (are_connected_to_center center_pos board)*)
+  failwith "unimplemented"
 
 (*Returns a string representation of a board_square that looks good for printing.*)
 let bsquare_tostring bsquare = 

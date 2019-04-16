@@ -26,12 +26,18 @@ let pos11 = make_pos 1 1
 let pos12 = make_pos 1 2
 let pos21 = make_pos 2 1
 let pos22 = make_pos 2 2
+let pos33 = make_pos 3 3
+let pos43 = make_pos 4 3
+let pos53 = make_pos 5 3
 let a = make_tile 'A'
 let b = make_tile 'B'
 let c = make_tile 'C'
 let board5x5 = new_board 5
 let square12A = set_occ square12emp a
 let board2x2a = set_square a pos12 board2x2
+let board5x5c = set_square a pos33 board5x5
+let board5x5ca = set_square b pos43 board5x5a
+let board5x5cab = set_square b pos43 board5x5a
 (*
 let make_get_x_tests  
     (name : string) 
@@ -92,6 +98,7 @@ let board_tests = [
   make_get_square_tests "get square empty 1 1" pos11 board2x2 square11emp;
   make_get_square_tests "get square empty 1 2" pos12 board2x2 square12emp;
   make_get_square_tests "get square 1 2 A" pos12 board2x2a square12A;
+
 ]
 
 let dictionary_tests = [
