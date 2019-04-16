@@ -115,24 +115,24 @@ let rec from_bag_to_inv (bag: tile list) (inv: tile list) =
     let new_inv = rand_tile::inv in 
     from_bag_to_inv new_tile_bag new_inv
 
+(** [comp_players player1 player2] compares player1 and player2 based on their
+    player_id*)
+let comp_players player1 player2 =
+  if player1.player_id = player2.player_id then 0
+  else if player1.player_id > player2.player_id then 1 else -1
 
-(** [replenish_inventory board] returns a new board with the current player's
-  * inventory of tiles updated, where the additional tiles added to that player's
-  * inventory were randomly selected and removed from the tile bag *)
-let rec replenish_inventory (board: t) : t = 
+(** [replenish_inventory board] returns a new player list with the current 
+  * player'sinventory of tiles updated, where the additional tiles added to 
+  * that player's inventory were randomly selected and removed from the tile 
+  * bag *)
+let rec replenish_inventory (board: t) : player list * tile list = 
   let player = board.curr_turn.curr_player in 
   let new_data = from_bag_to_inv board.tile_bag player.inv in 
   let new_bag = fst new_data in 
   let new_inv = snd new_data in
   let updated_player = {player with inv = new_inv; score=player.score; } in 
   let players = List.filter (fun player -> player.player_id<>updated_player.player_id) board.players in 
-  let players = updated_player::players in 
-  { 
-    players = players; 
-    board = board.board;
-    curr_turn = board.curr_turn;
-    tile_bag = new_bag;
-  }
+  (List.sort comp_players (updated_player::players), new_bag)
 
 (** [get_player_from_id id player_list] returns the player in [player_list] with [id]*)
 let rec get_player_from_id id player_list= 
@@ -141,12 +141,32 @@ let rec get_player_from_id id player_list=
   |h::t -> get_player_from_id id t
   |[] -> raise Not_found
 
+(** [next_player curr_id dup_players] returns the next_player. Requires that 
+    dup_players is a duplicated list of players (i.e. players@players) to emulate
+    wraparound *)
+let rec next_player curr_id dup_players = 
+  match dup_players with 
+  |{player_id = curr_id; score = _; inv = _}::t -> List.hd t
+  |h::t -> next_player curr_id t
+  |_ -> raise Not_found
+
 let end_turn state = 
   let curr_board = state.curr_turn.new_squares in 
   let merged_board = merge_boards curr_board state.board in 
+  let curr_player = state.curr_turn.curr_player in 
+  let id = curr_player.player_id in
+  let next = next_player id (state.players@state.players) in
   if is_valid_board merged_board = true then 
-  else {state with curr_turn = {state.curr_turn with }}
-
+    let new_players = fst (replenish_inventory state) in 
+    let new_bag = snd (replenish_inventory state) in
+    {players = new_players; 
+     board = merged_board;
+     curr_turn = {curr_player = next; new_squares = []};
+     tile_bag = new_bag}
+  else 
+    {state with 
+     curr_turn = {curr_player = get_player_from_id id state.players;
+                  new_squares = []}}
 
 let get_scores state = 
   let rec loop players = 

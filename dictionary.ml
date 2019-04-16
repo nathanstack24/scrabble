@@ -1,10 +1,4 @@
-module String_type: Set.OrderedType = struct
-  type t = string
-  let compare x y =
-    String.compare x y
-end
-
-module Dict:Set.S = Set.Make(String_type)
+module Dict = Set.Make(String)
 
 (** [read_channel channel acc] returns a list of all lines in the text file
   * corresponding to the input channel [channel] prepended onto string 
@@ -30,34 +24,29 @@ let parse_text (l: string list) =
   let words = List.flatten words_list in
   words
 
-(** [add_words_to_dict list txt acc] returns an index with every word in   
-  * string list [list] added to the index [acc] (with corresponding key
-  * [txt], the text file which contains each word in [list]). 
+(** [add_words_to_dict list txt acc] returns a set with every word in   
+  * list [word] added to the set [acc] (which is acting as our Scrabble dictionary). 
   * Requires: - [list] is a string list where each element is a word in
-  *             text file [txt].
-  *           - [txt] is a string corresponding to the name of a text file
-  *             (with extension .txt)
-  *           - [acc] is an index  *)
-let rec add_words_to_dict (list:string list) (txt:string) (acc:idx) = 
-  match list with 
+  *             text file "scrabble_dict.txt".
+  *           - [acc] is a   *)
+let rec add_words_to_dict (words: string list) (acc:Dict.t) = 
+  match words with 
   | [] -> acc
-  | h::t ->
-    let set = Dict.find h acc in 
-    match set with 
-    | None -> add_words_to_dict t txt (Dict.insert h 
-                                         (Set.insert txt Set.empty) acc)
-    | Some s -> let new_set = Set.insert txt s in
-      add_words_to_dict t txt (Dict.insert h new_set acc)
+  | h::t -> add_words_to_dict t (Dict.add h acc)
 
 
-let create_dictionary (dict:string) : idx =
+let create_dictionary =
   try 
     let dict_text_file = Unix.getcwd() ^ Filename.dir_sep ^ "scrabble_dict.txt" in 
     let channel = Pervasives.open_in dict_text_file in
     let all_words_list = read_channel channel [] in             
-    let sub_strings= parse_text all_words_list in
-    construct_idx txt_list uniq_sum_words Dict.empty
+    let all_words = parse_text all_words_list in 
+    add_words_to_dict all_words Dict.empty
   with 
   | t -> raise Not_found
+
+(* TODO : revisit this *)
+let is_member (dict: Dict.t) (str: string) = Dict.mem str dict
+
 
 

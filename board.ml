@@ -1,4 +1,4 @@
-
+open Dictionary
 type tile = char
 
 type position = int*int
@@ -7,6 +7,8 @@ type board_square = {
   pos : position; 
   occ : tile option
 }
+
+let dict = create_dictionary
 
 type t = board_square list
 
@@ -154,8 +156,11 @@ let word_list_from_board (board:t) =
       else loop t board
   in loop first_letters board
 
+let are_words_valid word_list = 
+  Dictionary.Dict.mem "abc" dict
+
 let is_valid_board (board:t) = 
-  failwith "Unimplemented"
+  failwith "unimplemented"
 
 (*Returns a string representation of a board_square that looks good for printing.*)
 let bsquare_tostring bsquare = 
@@ -171,10 +176,9 @@ let rec print_ordered_row = function
 (*Prints each of the rows on the board.
   TODO: Ensure that the rows from [get_board_row] are ORDERED left to right.*)
 let rec print_board_helper board n rowcounter: unit = 
-  print_int rowcounter;
-  if rowcounter > n then () 
-  else print_ordered_row (get_board_row rowcounter board); 
-  print_board_helper board n (rowcounter+1); ()
+  if rowcounter > n then ()
+  else (print_ordered_row (get_board_row rowcounter board); 
+        print_board_helper board n (rowcounter + 1); ())
 
 (*Main functionality is in helper. This simply sets the row counter to 1 and 
   lets the helper do the main work. *)
