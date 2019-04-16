@@ -49,15 +49,13 @@ let rec add_words_to_dict (list:string list) (txt:string) (acc:idx) =
     | Some s -> let new_set = Set.insert txt s in
       add_words_to_dict t txt (Dict.insert h new_set acc)
 
+
 let create_dictionary (dict:string) : idx =
   try 
     let dict_text_file = Unix.getcwd() ^ Filename.dir_sep ^ "scrabble_dict.txt" in 
     let channel = Pervasives.open_in dict_text_file in
     let all_words_list = read_channel channel [] in             
-    let sub_strings= parse_words all_words_list in
-    let sum_words = List.map List.concat sub_strings in
-    let uniq_sum_words = List.map (List.sort_uniq String.compare) 
-        sum_words in
+    let sub_strings= parse_text all_words_list in
     construct_idx txt_list uniq_sum_words Dict.empty
   with 
   | t -> raise Not_found
