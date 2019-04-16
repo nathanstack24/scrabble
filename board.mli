@@ -62,3 +62,4 @@ val is_valid_board : t -> bool
 (** Return an empty board full of size [n]x[n]*)
 val new_board : int -> t
 
+val make_board_square : char -> int -> int -> board_square

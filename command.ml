@@ -1,15 +1,8 @@
 (* Note: You may introduce new code anywhere in this file. *) 
-
-type object_phrase = string list
-
-type item = string list
-
-type verbal_phrase = string list
-
 type command = 
   | Quit
-  | Place
-  | Remove 
+  | Place of Board.board_square
+  | Remove of Board.board_square
   | Endturn
   | Score
 
@@ -31,7 +24,15 @@ let parse str : command =
   if List.length cmd = 0 then raise Empty else 
     match cmd with 
     | "quit"::t -> Quit
-    | _ > Place
+    | "place"::c::row::col::t 
+      -> Place (Board.make_board_square 
+                  (String.get c 0) (int_of_string row) (int_of_string col))
+    | "remove"::c::row::col::t 
+      -> Remove (Board.make_board_square 
+                   (String.get c 0) (int_of_string row) (int_of_string col))
+    | "endturn"::t -> Endturn
+    | "score"::t -> Score
+    | _ -> raise Malformed
 
 (*
   else if String.equal (List.hd cmd) "quit" then

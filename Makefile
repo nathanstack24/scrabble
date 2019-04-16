@@ -1,4 +1,4 @@
-MODULES=board command state main 
+MODULES=board command state main dictionary
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.ml

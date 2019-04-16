@@ -41,8 +41,8 @@ let rec set_square_helper  (acc:t) (tile:tile) (pos:position) (board:t)  =
       (new_square::acc) @ t else 
       set_square_helper (h::acc) tile pos t
 
-let make_board_square (c:char) (p:int*char) : board_square = 
-  failwith "Unimplemented"
+let make_board_square (c:char) (row:int) (col:int) : board_square = 
+  {pos=(row,col); occ=Some c}
 
 let set_square (tile:tile) (pos:position) (board:t) = 
   set_square_helper [] tile pos board
@@ -101,19 +101,65 @@ let get_board_col c board =
     |h::t -> if get_x h = c then (loop c t (h::acc)) else loop c t acc
   in loop c board []
 
-let rec find_word_row (first_letter_pos:position) (board:t)= 
+(** comparison function for sorting squares by the x coordinate of their 
+    position*)
+let comp_squares_x square1 square2 =
+  if get_x square1 = get_x square2 then 0
+  else if get_x square1 > get_x square2 then 1 else -1
+
+(** comparison function for sorting squares by the y coordinate of their 
+    position*)
+let comp_squares_y square1 square2 =
+  if get_y square1 = get_y square2 then 0
+  else if get_y square1 > get_y square2 then 1 else -1
+
+let find_word_row (first_letter_pos:position) (board:t)= 
   let row_ind = snd first_letter_pos in
-  let row = get_board_row row_ind board in 
+  let sorted_row = List.sort comp_squares_x (get_board_row row_ind board) in 
   let col_ind = fst first_letter_pos in
-  let rec loop lst c r word = 
+  let rec loop lst c word = 
     match lst with 
-    |{pos = (c, r)}
+    |{pos = (x, _); occ = _}::t when x < c -> loop t c word
+    |{pos = (x, _); occ = Some tile}::t -> loop t c word^(String.make 1 tile)
+    |{pos = (x, _); occ = None}::t -> word
+    |[] -> word 
+  in loop sorted_row col_ind ""
 
+let find_word_column (first_letter_pos:position) (board:t)= 
+  let col_ind = fst first_letter_pos in
+  let sorted_col = List.sort comp_squares_y (get_board_row col_ind board) in 
+  let row_ind = snd first_letter_pos in
+  let rec loop lst r word = 
+    match lst with 
+    |{pos = (x, _); occ = _}::t when x < r -> loop t r word
+    |{pos = (x, _); occ = Some tile}::t -> loop t r word^(String.make 1 tile)
+    |{pos = (x, _); occ = None}::t -> word
+    |[] -> word 
+  in loop sorted_col row_ind ""
 
+let word_list_from_board (board:t) = 
+  let first_letters = first_letter_squares_pos board in
+  let rec loop pos_list board = 
+    match pos_list with
+    |[] -> []
+    |h::t ->
+      let row_word = find_word_row h board in 
+      let col_word = find_word_column h board in 
+      let row_word_len = String.length row_word in
+      let col_word_len = String.length col_word in 
+      if row_word_len > 1 && col_word_len > 1 then 
+        row_word::col_word::loop t board
+      else if row_word_len > 1 && col_word_len <= 1 then row_word::loop t board 
+      else if row_word_len <= 1 && col_word_len > 1 then col_word::loop t board
+      else loop t board
+  in loop first_letters board
 
 let is_valid_board (board:t) = 
   failwith "Unimplemented"
 
+
+let print_board board : unit = 
+  failwith "Unimplemented"
 
 (** [new_board_helper r c n] defines a new list of empty board squares with 
     [r] rows and [c] columns. [n] = [c] allows the original value of [c] to 

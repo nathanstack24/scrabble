@@ -14,10 +14,6 @@ type player
 (** The type representing the actions of a player during their current turn *)
 type curr_turn
 
-(** The exception type eturned when an action is performed to remove
-    a tile from inventory which is not in the inventory*)
-exception NotInInv 
-
 (** The exception type returned when a tile is placed in a way that is illegal*)
 exception MisplacedTile
 
