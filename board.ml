@@ -69,6 +69,17 @@ let connected_to_center (center_pos:position) (board:t)=
   in bfs [] [] ((get_square center_pos board)::[]) 
     (List.map (fun square -> get_pos square) board)
 
+(** [are_connected_to_center center_pos board] returns whether all tiles on 
+    the board have a tile path to the center tile on the board*)
+let rec are_connected_to_center (center_pos:position) (board:t)=
+  let connected_squares = connected_to_center center_pos board in 
+  let rec loop connected square_list =
+    match square_list with 
+    |{pos = p; occ = None}::t -> true && loop connected t
+    |{pos = p; occ = Some tile}::t -> (List.mem p connected) && loop connected t
+    |[] -> true
+  in loop connected_squares board
+
 (** [first_letter_squares_pos board] returns the positions of the first letters
     of each word on the board*)
 let first_letter_squares_pos (board:t) = 
@@ -156,11 +167,20 @@ let word_list_from_board (board:t) =
       else loop t board
   in loop first_letters board
 
-let are_words_valid word_list = 
-  Dictionary.Dict.mem "abc" dict
+(** [are_words_valid word_list] returns whether all words in word_list are in
+    the English dictionary *)
+let rec are_words_valid word_list dict = 
+  match word_list with 
+  | h::t -> (Dictionary.Dict.mem (String.uppercase_ascii h) dict) 
+            && are_words_valid t dict
+  |[] -> true
 
 let is_valid_board (board:t) = 
-  failwith "unimplemented"
+  let word_list = word_list_from_board board in
+  let row_num = List.length (get_board_row 1 board) in  
+  let col_num = List.length (get_board_col 1 board) in 
+  let center_pos = (col_num/2 + 1, row_num/2 +1 ) in
+  (are_words_valid word_list dict) && (are_connected_to_center center_pos board)
 
 (*Returns a string representation of a board_square that looks good for printing.*)
 let bsquare_tostring bsquare = 
