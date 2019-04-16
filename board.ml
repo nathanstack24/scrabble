@@ -158,27 +158,29 @@ let is_valid_board (board:t) =
   failwith "Unimplemented"
 
 (*Returns a string representation of a board_square that looks good for printing.*)
-let bsquare_tostring = function 
+let bsquare_tostring bsquare = 
+  match bsquare.occ with
   | Some ti -> ("|" ^ (String.make 1 ti))
   | None -> "|#"
 
 (* Prints the given list of board_squares IN ORDER to the console. *)
 let rec print_ordered_row = function
-  | h::t -> print_string (bsquare_tostring h.occ)
+  | h::t -> print_string (bsquare_tostring h); print_ordered_row t
   | _ -> print_endline "|"
 
 (*Prints each of the rows on the board.
   TODO: Ensure that the rows from [get_board_row] are ORDERED left to right.*)
 let rec print_board_helper board n rowcounter: unit = 
-  if rowcounter >= n then () 
+  print_int rowcounter;
+  if rowcounter > n then () 
   else print_ordered_row (get_board_row rowcounter board); 
-  (print_board_helper board n (rowcounter+1))
+  print_board_helper board n (rowcounter+1); ()
 
-(*Main functionality is in helper. This simply sets the row counter to 0 and 
+(*Main functionality is in helper. This simply sets the row counter to 1 and 
   lets the helper do the main work. *)
 let print_board board : unit = 
-  let n = (List.length (get_board_row 0 board)) in 
-  print_board_helper board n 0
+  let n = (List.length (get_board_row 1 board)) in 
+  print_board_helper board n 1
 
 (** [new_board_helper r c n] defines a new list of empty board squares with 
     [r] rows and [c] columns. [n] = [c] allows the original value of [c] to 
@@ -194,10 +196,10 @@ let new_board n : t =
 
 (* let rec new_board_helper acc n = ()*)
 
-let rec merge_boards board1 board2 :t = 
+let rec merge_boards (board1:board_square list) (board2:t) : t  = 
   match board1 with 
   |[] -> board2
   |{pos = _ ; occ= None}::t -> board2
   |{pos = p ; occ= Some tile}::t -> 
-    if (get_square p board2) = {pos = _ ; occ = None}  then 
-      merge_boards t (set_square tile p board2) else raise InvalidPos p
+    if (get_square p board2) = {pos = p; occ = None}  then 
+      merge_boards t (set_square tile p board2) else raise (InvalidPos p)

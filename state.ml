@@ -134,13 +134,19 @@ let rec replenish_inventory (board: t) : t =
     tile_bag = new_bag;
   }
 
-let merge_boards t =
-  let curr_board = t.curr_turn.new_squares in 
-  let merged_board = merge_boards curr_board t.board
-
+(** [get_player_from_id id player_list] returns the player in [player_list] with [id]*)
+let rec get_player_from_id id player_list= 
+  match player_list with
+  |h::t when h.player_id = id -> h
+  |h::t -> get_player_from_id id t
+  |[] -> raise Not_found
 
 let end_turn state = 
-  failwith "unimplemented"
+  let curr_board = state.curr_turn.new_squares in 
+  let merged_board = merge_boards curr_board state.board in 
+  if is_valid_board merged_board = true then 
+  else {state with curr_turn = {state.curr_turn with }}
+
 
 let get_scores state = 
   let rec loop players = 

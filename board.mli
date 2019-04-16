@@ -67,4 +67,4 @@ val make_board_square : char -> int -> int -> board_square
 (** [merg_boards board1 board2] adds the occupied squares in [board1] to 
     [board2] if they are unoccupied. Requires that [board1] be a subset of 
     [board2] *)
-val merge_boards : t -> t -> t
+val merge_boards : board_square list -> t -> t
