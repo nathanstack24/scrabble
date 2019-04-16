@@ -62,9 +62,15 @@ val is_valid_board : t -> bool
 (** Return an empty board full of size [n]x[n]*)
 val new_board : int -> t
 
-val make_board_square : char -> int -> int -> board_square
+val make_board_square : char option -> int -> int -> board_square
 
 (** [merg_boards board1 board2] adds the occupied squares in [board1] to 
     [board2] if they are unoccupied. Requires that [board1] be a subset of 
     [board2] *)
 val merge_boards : board_square list -> t -> t
+
+(** [make_pos col row] returns the position at ([row], [col])*)
+val make_pos : int -> int -> position
+
+(** [make_tile c] returns the tile with character c*)
+val make_tile : char -> tile

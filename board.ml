@@ -43,8 +43,8 @@ let rec set_square_helper  (acc:t) (tile:tile) (pos:position) (board:t)  =
       (new_square::acc) @ t else 
       set_square_helper (h::acc) tile pos t
 
-let make_board_square (c:char) (row:int) (col:int) : board_square = 
-  {pos=(row,col); occ=Some c}
+let make_board_square (c:char option) (row:int) (col:int) : board_square = 
+  {pos=(row,col); occ=c}
 
 let set_square (tile:tile) (pos:position) (board:t): t = 
   set_square_helper [] tile pos board
@@ -227,3 +227,7 @@ let rec merge_boards (board1:board_square list) (board2:t) : t  =
   |{pos = p ; occ= Some tile}::t -> 
     if (get_square p board2) = {pos = p; occ = None}  then 
       merge_boards t (set_square tile p board2) else raise (InvalidPos p)
+
+let make_pos col row:position = (col, row)
+let make_tile c:tile = c
+

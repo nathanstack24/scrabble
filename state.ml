@@ -146,7 +146,7 @@ let rec get_player_from_id id player_list=
     wraparound *)
 let rec next_player curr_id dup_players = 
   match dup_players with 
-  |{player_id = curr_id; score = _; inv = _}::t -> List.hd t
+  |{player_id = id; score = _; inv = _}::t when id = curr_id-> List.hd t
   |h::t -> next_player curr_id t
   |_ -> raise Not_found
 
@@ -174,6 +174,8 @@ let get_scores state =
     |[] -> []
     |h::t -> h.score::(loop t)
   in loop state.players
+
+
 
 
 

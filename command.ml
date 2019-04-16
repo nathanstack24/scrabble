@@ -26,10 +26,10 @@ let parse str : command =
     | "quit"::t -> Quit
     | "place"::c::row::col::t 
       -> Place (Board.make_board_square 
-                  (String.get c 0) (int_of_string row) (int_of_string col))
+                  (Some (String.get c 0)) (int_of_string row) (int_of_string col))
     | "remove"::c::row::col::t 
       -> Remove (Board.make_board_square 
-                   (String.get c 0) (int_of_string row) (int_of_string col))
+                   (Some (String.get c 0)) (int_of_string row) (int_of_string col))
     | "endturn"::t -> Endturn
     | "score"::t -> Score
     | _ -> raise Malformed

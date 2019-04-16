@@ -17,6 +17,8 @@ type curr_turn
 (** The exception type returned when a tile is placed in a way that is illegal*)
 exception MisplacedTile
 
+exception NotPlaced
+
 (** [place_tile t p curr_turn] updates the curr_turn with tile t at 
     position p and removes it from the current player's inventory*)
 val place_tile : Board.tile -> Board.position -> t -> t
