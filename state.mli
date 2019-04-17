@@ -40,6 +40,7 @@ val end_turn : t -> t
 (** [get_scores] returns the score for each player in the game *)
 val get_scores : t -> int list
 
+val get_curr_turn : t -> curr_turn
 
 
 

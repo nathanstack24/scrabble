@@ -1,3 +1,5 @@
+open Command
+open State
 
 let rec get_next_command player : Command.command = 
   print_endline "Your turn, [PLAYERNAME]"; (*We'll prob need to pass in players to get_next_command *)
@@ -10,21 +12,19 @@ let rec get_next_command player : Command.command =
       print_endline "Bad command. Try again"; get_next_command player
     | Command.Empty -> get_next_command player
 
-let rec execute_command (me:State.t) : State.t = failwith "Unimplemented"
-(*
-  let p = State.curr_turn.current_player in 
-  match (get_next_command p) with 
+let rec execute_command (st:State.t) : State.t =
+  let p = (State.get_curr_turn st) in 
+  match (get_next_command ()) with (** the Unit should instead be a player ID *)
   | (Command.Quit) -> exit 0
-  | (Command.Place mybsquare) -> failwith "Unimplmented"(*add mybsqure to the curr_turn, if squareposition is occuied "can't place"*)
-  | (Command.Remove mybsquare) -> print_endline "Yo it ain't there" (*Remove mybsquare from curr_turn. If mybsquare not in curr_turn, *)
+  | (Command.Place mybsquare) -> failwith "whaaat"
+  | (Command.Remove mybsquare) -> print_endline "Yo it ain't there"; failwith "unimplemented" (*Remove mybsquare from curr_turn. If mybsquare not in curr_turn, *)
   | (Command.Endturn) -> failwith "Unimplemnted" (*Check validity of word in curr_turn, if word bad then restart turn. If good, then
                                                    set current_player <= next_player. *)
-  | (Command.Score) -> (*Print scores like this:
-                         Player1: 10
-                         Player2: 4
-                         Player3: 97*)
-*)
-(*FOR EACH CASE: At end of pattern matching, print out board, ask for next command from current_player. *)
+  | (Command.Score) -> failwith "Unimplmented"(*Print scores like this:
+                                                Player1: 10
+                                                Player2: 4
+                                                Player3: 97*)
+(*FOR EACH CASE: At end of patternatching, print out board, ask for next command from current_player. *)
 
 
 let main () =

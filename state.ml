@@ -177,6 +177,9 @@ let get_scores state =
     |h::t -> h.score::(loop t)
   in loop state.players
 
+let init_state x = failwith "unimplmented"
+
+let get_curr_turn st = st.curr_turn
 
 
 
