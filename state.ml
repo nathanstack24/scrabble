@@ -20,6 +20,8 @@ type t = {
 exception MisplacedTile
 exception NotPlaced
 
+let init_state (num_players: int) : t = {} 
+
 (** [is_in_inv t curr_turn] returns whether tile is in the current player's 
     inventory*)
 let is_in_inv (tile:tile) (curr_turn:curr_turn) = 

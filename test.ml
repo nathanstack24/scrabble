@@ -81,6 +81,15 @@ let make_dict_tests
   name >:: (fun _ -> 
       assert_equal expected_output (Dict.mem word dict)) 
 
+
+let make_tile_value_tests  
+    (name : string) 
+    (character: char)
+    (expected_output : int) : test = 
+  name >:: (fun _ -> 
+      assert_equal expected_output (Values.find character tile_values))
+
+
 (* let make_connected_to_center_tests
     (name : string) 
     (pos:position)
@@ -118,10 +127,22 @@ let dictionary_tests = [
   make_dict_tests "ZZZZ test" "ZZZZ" false;
 ]
 
+let tile_values_tests = [
+  make_tile_value_tests "A" 'A' 1;
+  make_tile_value_tests "B" 'B' 3;
+  make_tile_value_tests "D" 'D' 2;
+  make_tile_value_tests "F" 'F' 4;
+  make_tile_value_tests "J" 'J' 8;
+  make_tile_value_tests "K" 'K' 5;
+  make_tile_value_tests "Q" 'Q' 10;
+  make_tile_value_tests "Z" 'Z' 10;
+]
+
 
 let suite = "Scrabble test suite" >::: List.flatten [
     board_tests;
     dictionary_tests;
+    tile_values_tests;
   ]
 
 let _ = run_test_tt_main suite

@@ -51,12 +51,22 @@ let set_square (tile:tile) (pos:position) (board:t): t =
 
 (** [get_neighbors square board] returns a list of the boards niehgboring 
     [square] in [board]*)
+<<<<<<< Updated upstream
 let get_neighbors (p:position) (pos_list: position list) = 
   List.filter (fun p_neigh -> 
       (snd p = snd p_neigh && 
        (fst p = fst p_neigh + 1 || fst p = fst p_neigh - 1)) ||
       (fst p = fst p_neigh && 
        (snd p = snd p_neigh + 1 || snd p = snd p_neigh - 1 ))) pos_list
+=======
+(* let get_neighbors (square:board_square) (board:t) = 
+   let pos_list = List.map(fun square -> get_pos square) board in
+   List.filter (fun p_neigh -> 
+       (snd p = snd p_neigh && 
+        (fst p = fst p_neigh + 1 || fst p = fst p_neigh - 1)) ||
+       (fst p = fst p_neigh && 
+        (snd p = snd p_neigh + 1 || snd p = snd p_neigh - 1 )) pos_list *)
+>>>>>>> Stashed changes
 
 (** [connected_to_center center_pos board] Returns a list of all of the occupied
     board_squares with a path from the center center*)
