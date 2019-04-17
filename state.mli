@@ -21,10 +21,11 @@ exception NotPlaced
 
 (** [init_state num_players] is the initial state of the Scrabble game with
   * [num_players] players. *)
-(* val init_state : int -> t *)
+val init_state : int -> t 
 
 (** [place_tile t p curr_turn] updates the curr_turn with tile t at 
-    position p and removes it from the current player's inventory*)
+    position p and removes it from the current player's inventory 
+    Raises Misplaced_tile  *)
 val place_tile : Board.tile -> Board.position -> t -> t
 
 (** [remove_tile p curr_turn] removes the tile at position p from the placed 
@@ -37,11 +38,16 @@ val remove_tile : Board.position -> t -> t
     else returns their tiles to them and resets the turn *)
 val end_turn : t -> t
 
-(** [get_scores] returns the score for each player in the game *)
-val get_scores : t -> int list
+(** [get_scores] returns a tuple containing the score for each player in the game *)
+val get_scores : t -> (int*int) list
 
-val get_curr_turn : t -> curr_turn
+(** prints the current player's inventory*)
+val print_inventory : t -> unit
 
+(** prints the board in the current state*)
+val print_board_from_state : t -> unit
 
+(** returns the current player's id*)
+val get_curr_player_id : t -> int
 
 

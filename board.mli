@@ -74,3 +74,9 @@ val make_pos : int -> int -> position
 
 (** [make_tile c] returns the tile with character c*)
 val make_tile : char -> tile
+
+(** [get_board_score board] returns the score value of all the words on [board]*)
+val get_board_score : t -> t -> int
+
+(** prints the character on a tile*)
+val print_tile : tile -> unit

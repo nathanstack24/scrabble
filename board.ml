@@ -51,22 +51,12 @@ let set_square (tile:tile) (pos:position) (board:t): t =
 
 (** [get_neighbors square board] returns a list of the boards niehgboring 
     [square] in [board]*)
-<<<<<<< Updated upstream
 let get_neighbors (p:position) (pos_list: position list) = 
   List.filter (fun p_neigh -> 
       (snd p = snd p_neigh && 
        (fst p = fst p_neigh + 1 || fst p = fst p_neigh - 1)) ||
       (fst p = fst p_neigh && 
        (snd p = snd p_neigh + 1 || snd p = snd p_neigh - 1 ))) pos_list
-=======
-(* let get_neighbors (square:board_square) (board:t) = 
-   let pos_list = List.map(fun square -> get_pos square) board in
-   List.filter (fun p_neigh -> 
-       (snd p = snd p_neigh && 
-        (fst p = fst p_neigh + 1 || fst p = fst p_neigh - 1)) ||
-       (fst p = fst p_neigh && 
-        (snd p = snd p_neigh + 1 || snd p = snd p_neigh - 1 )) pos_list *)
->>>>>>> Stashed changes
 
 (** [connected_to_center center_pos board] Returns a list of all of the occupied
     board_squares with a path from the center center*)
@@ -139,7 +129,7 @@ let comp_squares_x square1 square2 =
     position*)
 let comp_squares_y square1 square2 =
   if get_y square1 = get_y square2 then 0
-  else if get_y square1 > get_y square2 then 1 else -1
+  else if get_y square1 > get_y square2 then -1 else 1
 
 let find_word_row (first_letter_pos:position) (board:t)= 
   let row_ind = snd first_letter_pos in
@@ -155,11 +145,11 @@ let find_word_row (first_letter_pos:position) (board:t)=
 
 let find_word_column (first_letter_pos:position) (board:t)= 
   let col_ind = fst first_letter_pos in
-  let sorted_col = List.sort comp_squares_y (get_board_row col_ind board) in 
+  let sorted_col = List.sort comp_squares_y (get_board_col col_ind board) in 
   let row_ind = snd first_letter_pos in
   let rec loop lst r word = 
     match lst with 
-    |{pos = (_, x); occ = _}::t when x < r -> loop t r word
+    |{pos = (_, x); occ = _}::t when x > r -> loop t r word
     |{pos = (_, x); occ = Some tile}::t -> loop t r (word^(String.make 1 tile))
     |{pos = (_, x); occ = None}::t -> word
     |[] -> word 
@@ -194,8 +184,9 @@ let is_valid_board (board:t) =
   let row_num = List.length (get_board_row 1 board) in  
   let col_num = List.length (get_board_col 1 board) in 
   let center_pos = (col_num/2 + 1, row_num/2 +1 ) in
-  (are_words_valid word_list dict) && (are_connected_to_center center_pos board)
-
+  (are_words_valid word_list dict) &&
+  (are_connected_to_center center_pos board)
+(* Not catching the edge case where there is a single tile in the center*)
 
 (*Returns a string representation of a board_square that looks good for printing.*)
 let bsquare_tostring bsquare = 
@@ -219,7 +210,7 @@ let rec print_board_helper board rowcounter: unit =
   lets the helper do the main work. *)
 let print_board board : unit = 
   let n = (List.length (get_board_row 1 board)) in 
-  print_board_helper board n
+  print_board_helper board n; print_string "\n"
 
 (** [new_board_helper r c n] defines a new list of empty board squares with 
     [r] rows and [c] columns. [n] = [c] allows the original value of [c] to 
@@ -246,3 +237,27 @@ let rec merge_boards (board1:board_square list) (board2:t) : t  =
 let make_pos col row:position = (col, row)
 let make_tile c:tile = c
 
+let rec get_word_score (word:string) (n:int) : int = 
+  if n = 0 then 0 else 
+    let curr_char = String.get word (n-1) in 
+    let char_score = Values.find curr_char tile_values in 
+    char_score + get_word_score word (n-1)
+
+(** get_word_difference returns the words that are in list2 that are not in 
+    list1*)
+let get_word_difference wordlist1 wordlist2 = 
+  List.filter (fun w2-> List.mem w2 wordlist1 = false) wordlist2
+
+let get_board_score (old_board:t) (new_board:t)= 
+  let old_words = word_list_from_board old_board in 
+  let all_words = word_list_from_board new_board in 
+  let new_words = get_word_difference old_words all_words in
+  let rec loop words = 
+    match words with 
+    |h::t -> (get_word_score h (String.length h)) + loop t
+    |[] -> 0
+  in loop new_words
+
+
+
+let print_tile (tile:tile) = print_char tile 

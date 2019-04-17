@@ -1,8 +1,10 @@
+open Board
 (* Note: You may introduce new code anywhere in this file. *) 
 type command = 
   | Quit
-  | Place of Board.board_square
-  | Remove of Board.board_square
+  | Place of tile*position
+  | Remove of Board.position
+  | Inventory
   | Endturn
   | Score
 
@@ -25,25 +27,13 @@ let parse str : command =
     match cmd with 
     | "quit"::t -> Quit
     | "place"::c::row::col::t 
-      -> Place (Board.make_board_square 
-                  (Some (String.get c 0)) (int_of_string row) (int_of_string col))
-    | "remove"::c::row::col::t 
-      -> Remove (Board.make_board_square 
-                   (Some (String.get c 0)) (int_of_string row) (int_of_string col))
+      -> Place ((Board.make_tile (String.get c 0) ), 
+                (Board.make_pos (int_of_string row) (int_of_string col))) (*(Board.make_board_square 
+                                                                            (Some (String.get c 0)) (int_of_string row) (int_of_string col))*)
+    | "remove"::row::col::t -> Remove (Board.make_pos (int_of_string row) (int_of_string col))
+    (*(Board.make_board_square 
+                 (Some (String.get c 0)) (int_of_string row) (int_of_string col))*)
+    | "inventory"::t -> Inventory
     | "endturn"::t -> Endturn
     | "score"::t -> Score
     | _ -> raise Malformed
-
-(*
-  else if String.equal (List.hd cmd) "quit" then
-    if (List.length cmd <> 1) then raise Malformed else Quit
-  else if String.equal (List.hd cmd) "place" then
-    if (List.length cmd = 1) then raise Malformed else Place [(List.tl cmd), 
-  else if String.equal (List.hd cmd) "endturn" then 
-    if (List.length cmd = 1) then raise Malformed else Remove (List.tl cmd)
-  else if String.equal (List.hd cmd) "remove" then
-    if (List.length cmd = 1) then raise Malformed else endturn (List.tl cmd)
-  else if String.equal (List.hd cmd) "score" then
-    if (List.length cmd <> 1) then raise Malformed else Score
-  else raise Malformed
-   *)

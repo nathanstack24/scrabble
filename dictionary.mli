@@ -15,5 +15,12 @@ module Values: Map.S with type key = char
   * Scrabble dictionary*)
 val create_dictionary: Dict.t
 
+(** [tile_values] is a mapping from all characters in the alphabet to the number
+  * of points that particular character is worth in Scrabble. *)
+val tile_values: int Values.t
+
+(** [init_tile_bag is the initial tile bag used in a game of scrabble *)
+val init_tile_bag: char list
+
 
 

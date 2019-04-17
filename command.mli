@@ -1,5 +1,11 @@
 (** Represents one of the possible commands for the game.*)
-type command
+type command = 
+  | Quit
+  | Place of Board.tile*Board.position
+  | Remove of Board.position
+  | Inventory
+  | Endturn
+  | Score
 
 (** The exception raised when a command is malformed*)
 exception Malformed

@@ -30,6 +30,8 @@ let pos22 = make_pos 2 2
 let pos33 = make_pos 3 3
 let pos43 = make_pos 4 3
 let pos53 = make_pos 5 3
+let pos32 = make_pos 3 2
+let pos31 = make_pos 3 1
 let a = make_tile 'A'
 let b = make_tile 'B'
 let c = make_tile 'C'
@@ -41,6 +43,9 @@ let board5x5ca = set_square a pos43 board5x5c (* 5x5 board (3,3):c, (4,3):a *)
 let board5x5cab = set_square b pos53 board5x5ca (* 5x5 board (3,3):c, (4,3):a, (5,3):b *)
 let board_disc = set_square b pos11 (set_square a pos12 board5x5cab) (* 5x5 board (1,1):a, (1,2):b, (3,3):c, (4,3):a, (5,3):b *)
 let square43a = make_board_square (Some 'A') 4 3
+let boardvertca = set_square a pos32 board5x5c
+let boardvertcab = set_square b pos31 board5x5c
+
 
 let make_get_pos_tests  
     (name : string) 
@@ -72,30 +77,14 @@ let make_board_valid_tests
   name >:: (fun _ -> 
       assert_equal expected_output (is_valid_board board))
 
-let dict = create_dictionary
-
-let make_dict_tests  
+let make_board_score_tests  
     (name : string) 
-    (word: string)
-    (expected_output : bool) : test = 
-  name >:: (fun _ -> 
-      assert_equal expected_output (Dict.mem word dict)) 
-
-
-let make_tile_value_tests  
-    (name : string) 
-    (character: char)
+    (board: Board.t) 
     (expected_output : int) : test = 
   name >:: (fun _ -> 
-      assert_equal expected_output (Values.find character tile_values))
+      assert_equal expected_output (get_board_score board))
 
 
-(* let make_connected_to_center_tests
-    (name : string) 
-    (pos:position)
-    (board:Board.t )
-    (expected_output:position list) : test =  
-   name>:: (fun _ -> assert_equal expected_output (connected_to_center pos board)) *)
 let board_tests = [
   make_get_pos_tests "get pos 1, 1" square11emp pos11;
   make_get_pos_tests "get pos 1, 2" square12emp pos12;
@@ -107,13 +96,23 @@ let board_tests = [
   make_merge_boards_tests "merge boards 5x5 ca" (square43a::[]) board5x5c board5x5ca;
 
   make_board_valid_tests "valid board 5x5 cab" board5x5cab true;
-  (*  make_board_valid_tests "invalid board 5x5 ca" board5x5ca false;
-      make_board_valid_tests "invalid board 5x5 disconnected" board_disc false;*)
+  make_board_valid_tests "invalid board 5x5 ca" board5x5ca false;
+  make_board_valid_tests "invalid board 5x5 disconnected" board_disc false;
+  make_board_valid_tests "invalid board 5x5 vertical ca" boardvertca false;
+
+  make_board_score_tests "empty board score" board5x5 0;
+  make_board_score_tests "empty board score" board5x5cab 7;
 ]
 
-let state_tests = [
+(* scrabble dictionary test cases *)
+let dict = create_dictionary
 
-]
+let make_dict_tests  
+    (name : string) 
+    (word: string)
+    (expected_output : bool) : test = 
+  name >:: (fun _ -> 
+      assert_equal expected_output (Dict.mem word dict)) 
 
 
 let dictionary_tests = [
@@ -127,6 +126,16 @@ let dictionary_tests = [
   make_dict_tests "ZZZZ test" "ZZZZ" false;
 ]
 
+
+(* tile values tests*)
+
+let make_tile_value_tests  
+    (name : string) 
+    (character: char)
+    (expected_output : int) : test = 
+  name >:: (fun _ -> 
+      assert_equal expected_output (Values.find character tile_values))
+
 let tile_values_tests = [
   make_tile_value_tests "A" 'A' 1;
   make_tile_value_tests "B" 'B' 3;
@@ -138,6 +147,12 @@ let tile_values_tests = [
   make_tile_value_tests "Z" 'Z' 10;
 ]
 
+(* state tests *)
+let initial_state = init_state 2
+
+let state_tests = [
+
+]
 
 let suite = "Scrabble test suite" >::: List.flatten [
     board_tests;

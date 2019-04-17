@@ -1,4 +1,5 @@
 open Board 
+open Dictionary
 
 type player = {
   player_id: int;
@@ -19,8 +20,62 @@ type t = {
 
 exception MisplacedTile
 exception NotPlaced
+exception EmptyBoardSquare
 
-let init_state (num_players: int) : t = {} 
+(** [remove_from_tile_list tile lst] returns the tile list [lst] without the 
+    first occurence of [tile]. Raises Not_found if tile is not in the tile 
+    list *)
+let remove_from_tile_list (tile:tile) (lst: tile list) = 
+  let rec loop acc tile lst =
+    match lst with
+    |h::t when h = tile -> acc @ t
+    |h::t -> loop (h::acc) tile t
+    |[] -> raise (Not_found)
+  in loop [] tile lst  
+
+(** [make_tile_bag char_lst acc] returns the list of tiles corresponding to a list 
+    of chars*)
+let rec make_tile_bag (char_lst: char list) (acc:tile list) : tile list = 
+  match char_lst with
+  |[] -> acc
+  |h::t -> make_tile_bag t ((make_tile h)::acc)
+
+
+(** [from_bag_to_inv bag inv] returns a tuple whose first element is a tile list
+  * representing the new tile bag and whose second element is a tile list 
+  * representing the new inventory of the current player. Tiles from the tile
+  * bag are randomly chosen and added to the user's inventory until the user has
+  * 7 tiles in their inventory (as the rules of scrabble require) *)
+let rec from_bag_to_inv (bag: tile list) (inv: tile list) = 
+  let size = List.length inv in
+  if (size=7) then (bag,inv) else
+    let bag_size = List.length bag in
+    if bag_size=0 then failwith "Empty bag" else 
+      let rand_tile = List.nth bag (Random.int bag_size) in 
+      let new_tile_bag = remove_from_tile_list rand_tile bag in 
+      let new_inv = rand_tile::inv in 
+      from_bag_to_inv new_tile_bag new_inv
+
+
+let init_state (num_players: int) : t =
+  if num_players<2 then failwith "Error: need at least two players" else 
+    let rec create_players (num:int) (acc:player list) (bag: tile list) : (tile list * player list) = 
+      if num=0 then (bag,acc) else 
+        let new_data = from_bag_to_inv bag [] in 
+        let new_bag = fst new_data in 
+        let new_inv = snd new_data in 
+        let new_player: player = {player_id=num; score=0; inv=new_inv} in 
+        create_players (num-1) (new_player::acc) new_bag  in 
+    let data = create_players num_players [] (make_tile_bag init_tile_bag []) in 
+    let bag = fst data in 
+    let players = snd data in
+    let new_curr_turn = {curr_player=(List.hd players); new_squares=[]} in 
+    {
+      players = players;
+      board = new_board 15;
+      curr_turn = new_curr_turn;
+      tile_bag = bag;
+    }
 
 (** [is_in_inv t curr_turn] returns whether tile is in the current player's 
     inventory*)
@@ -54,21 +109,11 @@ let same_y (square: board_square) (curr_turn:curr_turn) =
   in loop true sq_y new_squares
 
 (** [is_in_line tile curr_turn] returns true if tile is in the same column or
-    in the same row as all of the other newly placed tiles in the turn*)
+    in the same row as all of the other newly placed tiles in the turn 
+    Otherwise raises MisplacedTile*)
 let is_in_line (square:board_square) (curr_turn:curr_turn) = 
   if (same_x square curr_turn || same_y square curr_turn) = true then true else
     raise MisplacedTile 
-
-(** [remove_from_tile_list tile lst] returns the tile list [lst] without the 
-    first occurence of [tile]. Raises Not_found if tile is not in the player's 
-    inventory *)
-let remove_from_tile_list (tile:tile) (lst: tile list) = 
-  let rec loop acc tile lst =
-    match lst with
-    |h::t when h = tile -> acc @ t
-    |h::t -> loop (h::acc) tile t
-    |[] -> raise (Not_found)
-  in loop [] tile lst  
 
 let place_tile (tile:tile) (pos:position) (state:t) = 
   if is_in_inv tile state.curr_turn then
@@ -84,7 +129,6 @@ let place_tile (tile:tile) (pos:position) (state:t) =
       else state
     else state
   else state
-
 
 let remove_tile (pos:position) (board:t) = 
   let placed_squares = board.curr_turn.new_squares in 
@@ -102,26 +146,16 @@ let remove_tile (pos:position) (board:t) =
       new_squares=new_placed_squares;} in 
     { board with curr_turn = new_curr_turn }
 
-
-(** [from_bag_to_inv bag inv] returns a tuple whose first element is a tile list
-  * representing the new tile bag and whose second element is a tile list 
-  * representing the new inventory of the current player. Tiles from the tile
-  * bag are randomly chosen and added to the user's inventory until the user has
-  * 7 tiles in their inventory (as the rules of scrabble require) *)
-let rec from_bag_to_inv (bag: tile list) (inv: tile list) = 
-  let size = List.length inv in
-  if (size=7) then (bag,inv) else
-    let bag_size = List.length bag in   
-    let rand_tile = List.nth bag (Random.int bag_size) in 
-    let new_tile_bag = remove_from_tile_list rand_tile bag in 
-    let new_inv = rand_tile::inv in 
-    from_bag_to_inv new_tile_bag new_inv
-
 (** [comp_players player1 player2] compares player1 and player2 based on their
     player_id*)
 let comp_players player1 player2 =
   if player1.player_id = player2.player_id then 0
   else if player1.player_id > player2.player_id then 1 else -1
+
+(** [get_new_score old_boad new_board] returns the additional points a player
+    earned based on the board before their turn and after their turn*)
+let get_new_score old_board new_board = 
+  Board.get_board_score old_board new_board
 
 (** [replenish_inventory board] returns a new player list with the current 
   * player's inventory of tiles updated, where the additional tiles added to 
@@ -132,7 +166,10 @@ let rec replenish_inventory (board: t) : player list * tile list =
   let new_data = from_bag_to_inv board.tile_bag player.inv in 
   let new_bag = fst new_data in 
   let new_inv = snd new_data in
-  let updated_player = {player with inv = new_inv; score=player.score; } in 
+  let curr_board = board.board in 
+  let new_board = merge_boards board.curr_turn.new_squares curr_board in 
+  let new_score = get_new_score curr_board new_board in
+  let updated_player = {player with inv = new_inv; score=(player.score + new_score); } in 
   let players = List.filter (fun player -> player.player_id<>updated_player.player_id) board.players in 
   (List.sort comp_players (updated_player::players), new_bag)
 
@@ -143,45 +180,55 @@ let rec get_player_from_id id player_list=
   |h::t -> get_player_from_id id t
   |[] -> raise Not_found
 
-(** [next_player curr_id dup_players] returns the next_player. Requires that 
-    dup_players is a duplicated list of players (i.e. players@players) to emulate
-    wraparound *)
-let rec next_player curr_id dup_players = 
-  match dup_players with 
-  |{player_id = curr_id; score = _; inv = _}::t -> List.hd t
-  |h::t -> next_player curr_id t
-  |_ -> raise Not_found
+(** [next_player curr_id players] returns the next player. *)
+let rec next_player curr_id players = 
+  let next_id = curr_id + 1 in 
+  try get_player_from_id next_id players with
+  |Not_found -> get_player_from_id 1 players
+
+(** prints a list*)
+let rec print_tile_list = function 
+    [] -> ()
+  | e::l -> print_tile e ; print_string " " ; print_tile_list l
 
 let end_turn state = 
   let curr_board = state.curr_turn.new_squares in 
   let merged_board = merge_boards curr_board state.board in 
   let curr_player = state.curr_turn.curr_player in 
-  let id = curr_player.player_id in
-  let next = next_player id (state.players@state.players) in
+  let id = curr_player.player_id in 
+  let next = next_player id state.players in 
   if is_valid_board merged_board = true then 
-    let new_players = fst (replenish_inventory state) in 
-    let new_bag = snd (replenish_inventory state) in
+    let new_data = replenish_inventory state in
+    let new_players = fst new_data in 
+    let new_bag = snd new_data in 
     {players = new_players; 
      board = merged_board;
      curr_turn = {curr_player = next; new_squares = []};
-     tile_bag = new_bag}
+     tile_bag = new_bag} 
   else 
     {state with 
      curr_turn = {curr_player = get_player_from_id id state.players;
                   new_squares = []}}
 
-let get_scores state = 
+let get_scores (state:t) = 
   let rec loop players = 
     match players with 
     |[] -> []
-    |h::t -> h.score::(loop t)
+    |h::t -> (h.player_id, h.score)::(loop t)
   in loop state.players
 
-let init_state x = failwith "unimplmented"
+(** [add_curr_turn st bsq] returns a new state after adding the board square 
+  * [bsq] to state [st]'s curtur's newsquares.*)
+let add_curr_turn st bsq = 
+  let newsq = (List.cons bsq st.curr_turn.new_squares) in 
+  let ct = st.curr_turn in 
+  {st with curr_turn={ct with new_squares=newsq}}
 
-let get_curr_turn st = st.curr_turn
+let print_board_from_state st = Board.print_board (merge_boards st.curr_turn.new_squares st.board)
 
 
+let print_inventory st = print_tile_list st.curr_turn.curr_player.inv
 
 
+let get_curr_player_id st = st.curr_turn.curr_player.player_id
 
