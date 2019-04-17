@@ -122,7 +122,7 @@ let comp_players player1 player2 =
   else if player1.player_id > player2.player_id then 1 else -1
 
 (** [replenish_inventory board] returns a new player list with the current 
-  * player'sinventory of tiles updated, where the additional tiles added to 
+  * player's inventory of tiles updated, where the additional tiles added to 
   * that player's inventory were randomly selected and removed from the tile 
   * bag *)
 let rec replenish_inventory (board: t) : player list * tile list = 
@@ -146,7 +146,7 @@ let rec get_player_from_id id player_list=
     wraparound *)
 let rec next_player curr_id dup_players = 
   match dup_players with 
-  |{player_id = id; score = _; inv = _}::t when id = curr_id-> List.hd t
+  |{player_id = curr_id; score = _; inv = _}::t -> List.hd t
   |h::t -> next_player curr_id t
   |_ -> raise Not_found
 
@@ -174,8 +174,6 @@ let get_scores state =
     |[] -> []
     |h::t -> h.score::(loop t)
   in loop state.players
-
-
 
 
 

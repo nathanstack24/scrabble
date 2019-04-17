@@ -2,6 +2,7 @@ open OUnit2
 open Board
 open Command
 open State
+open Dictionary
 
 (********************************************************************
    Here are some helper functions for your testing of set-like lists. 
@@ -32,27 +33,14 @@ let pos53 = make_pos 5 3
 let a = make_tile 'A'
 let b = make_tile 'B'
 let c = make_tile 'C'
-let board5x5 = new_board 5
+let board5x5 = new_board 5 (* empty 5x5 board*)
 let square12A = set_occ square12emp a
 let board2x2a = set_square a pos12 board2x2
-let board5x5c = set_square a pos33 board5x5
-let board5x5ca = set_square b pos43 board5x5a
-let board5x5cab = set_square b pos43 board5x5a
-(*
-let make_get_x_tests  
-    (name : string) 
-    (square : Board.board_square) 
-    (expected_output : int) : test = 
-  name >:: (fun _ -> 
-      assert_equal expected_output (get_x square))
-
-let make_get_y_tests  
-    (name : string) 
-    (square : Board.board_square) 
-    (expected_output : int) : test = 
-  name >:: (fun _ -> 
-      assert_equal expected_output (get_y square))
-*)
+let board5x5c = set_square c pos33 board5x5 (* 5x5 board (3,3):c *)
+let board5x5ca = set_square a pos43 board5x5c (* 5x5 board (3,3):c, (4,3):a *)
+let board5x5cab = set_square b pos53 board5x5ca (* 5x5 board (3,3):c, (4,3):a, (5,3):b *)
+let board_disc = set_square b pos12 (set_square a pos11 board5x5cab) (* 5x5 board (1,1):a, (1,2):b, (3,3):c, (4,3):a, (5,3):b *)
+let square43a = make_board_square (Some 'A') 4 3
 let make_get_pos_tests  
     (name : string) 
     (square : Board.board_square) 
@@ -67,30 +55,37 @@ let make_get_square_tests
     (expected_output : board_square) : test = 
   name >:: (fun _ -> 
       assert_equal expected_output (get_square pos board))
-(*
-let make_get_occ_tests  
-    (name : string) 
-    (square : Board.board_square) 
-    (expected_output : tile option) : test = 
-  name >:: (fun _ -> 
-      assert_equal expected_output (get_occ square))
 
-let make_set_occ_tests  
+let make_merge_boards_tests  
     (name : string) 
-    (square : Board.board_square)
-    (tile : tile) 
-    (expected_output : board_square) : test = 
+    (sq_list : Board.board_square list)
+    (board: Board.t) 
+    (expected_output : Board.t) : test = 
   name >:: (fun _ -> 
-      assert_equal expected_output (set_occ square tile))
+      assert_equal expected_output (merge_boards sq_list board))
+
+let make_board_valid_tests  
+    (name : string) 
+    (board: Board.t) 
+    (expected_output : bool) : test = 
+  name >:: (fun _ -> 
+      assert_equal expected_output (is_valid_board board))
+
+let dict = create_dictionary
 
 let make_dict_tests  
     (name : string) 
-    (square : Board.board_square)
-    (tile : tile) 
-    (expected_output : board_square) : test = 
+    (word: string)
+    (expected_output : bool) : test = 
   name >:: (fun _ -> 
-      assert_equal expected_output (set_occ square tile)) *)
+      assert_equal expected_output (Dict.mem word dict)) 
 
+(* let make_connected_to_center_tests
+    (name : string) 
+    (pos:position)
+    (board:Board.t )
+    (expected_output:position list) : test =  
+   name>:: (fun _ -> assert_equal expected_output (connected_to_center pos board)) *)
 let board_tests = [
   make_get_pos_tests "get pos 1, 1" square11emp pos11;
   make_get_pos_tests "get pos 1, 2" square12emp pos12;
@@ -99,16 +94,33 @@ let board_tests = [
   make_get_square_tests "get square empty 1 2" pos12 board2x2 square12emp;
   make_get_square_tests "get square 1 2 A" pos12 board2x2a square12A;
 
+  make_merge_boards_tests "merge boards 5x5 ca" (square43a::[]) board5x5c board5x5ca;
+
+  make_board_valid_tests "valid board 5x5 cab" board5x5cab true;
+  make_board_valid_tests "invalid board 5x5 ca" board5x5ca false;
+  make_board_valid_tests "invalid board 5x5 disconnected" board_disc false;
 ]
 
+let state_tests = [
+
+]
+
+
 let dictionary_tests = [
-
-
+  make_dict_tests "AA test" "AA" true;
+  make_dict_tests "AAH test" "AAH" true;
+  make_dict_tests "AAAA test" "AAAA" false;
+  make_dict_tests "DOG test" "DOG" true;
+  make_dict_tests "ASDFGJKL test" "ASDFGJKL" false;
+  make_dict_tests "ZZZ test" "ZZZ" true;
+  make_dict_tests "ZZZS test" "ZZZS" true;
+  make_dict_tests "ZZZZ test" "ZZZZ" false;
 ]
 
 
 let suite = "Scrabble test suite" >::: List.flatten [
     board_tests;
+    dictionary_tests;
   ]
 
 let _ = run_test_tt_main suite

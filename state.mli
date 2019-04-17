@@ -19,6 +19,10 @@ exception MisplacedTile
 
 exception NotPlaced
 
+(** [init_state num_players] is the initial state of the Scrabble game with
+  * [num_players] players. *)
+val init_state : int -> t
+
 (** [place_tile t p curr_turn] updates the curr_turn with tile t at 
     position p and removes it from the current player's inventory*)
 val place_tile : Board.tile -> Board.position -> t -> t

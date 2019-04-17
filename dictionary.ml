@@ -1,5 +1,8 @@
 module Dict = Set.Make(String)
 
+module Values = Map.Make(Char)
+
+
 (** [read_channel channel acc] returns a list of all lines in the text file
   * corresponding to the input channel [channel] prepended onto string 
   * list [acc]. Each element of [acc] corresponds to a line in the text 
@@ -37,16 +40,24 @@ let rec add_words_to_dict (words: string list) (acc:Dict.t) =
 
 let create_dictionary =
   try 
-    let dict_text_file = Unix.getcwd() ^ Filename.dir_sep ^ "scrabble_dict.txt" in 
+    let dict_text_file = Unix.getcwd() ^ Filename.dir_sep ^ "scrabble_dict.txt" in
     let channel = Pervasives.open_in dict_text_file in
-    let all_words_list = read_channel channel [] in             
+    let all_words_list = read_channel channel [] in       
     let all_words = parse_text all_words_list in 
     add_words_to_dict all_words Dict.empty
   with 
-  | t -> raise Not_found
+  | t -> raise Not_found(* Throwing error *)
 
-(* TODO : revisit this *)
-let is_member (dict: Dict.t) (str: string) = Dict.mem str dict
+
+let points = [('A',1); ('E',1); ('I',1); ('O',1); ('U',1); ('L',1); ('N',1); 
+              ('S',1); ('T',1); ('R',1)]
+
+
+let tile_values = 
+
+
+  (* TODO : revisit this *)
+  let is_member (dict: Dict.t) (str: string) = Dict.mem str dict
 
 
 
