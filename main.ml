@@ -71,7 +71,7 @@ let rec execute_command (st:State.t) : State.t =
         inventory to check the letters in your inventory
         score to print all players' scores
         board to print out the current board
-        endturn to end your turn; if your moves are not valid, all newly placed tiles will be returned to you
+        endturn to end your turn; if your moves are not valid, your turn will not end
         help to print this message again
         quit to quit\n \n"); 
     print_newline(); execute_command st
