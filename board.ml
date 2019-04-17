@@ -98,7 +98,7 @@ let first_letter_squares_pos (board:t) =
     |{pos=p; occ = Some tile}::t ->  
       let (up:position) = (fst p, (snd p)+1) in 
       let (left:position) = (fst p - 1, snd p) in 
-      if get_occ (get_square up board) = None &&
+      if get_occ (get_square up board) = None ||
          get_occ(get_square left board) = None then
         loop t (p::acc) board else loop t acc board in 
   loop board [] board 
