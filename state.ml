@@ -51,10 +51,11 @@ let rec from_bag_to_inv (bag: tile list) (inv: tile list) =
   if (size=7) then (bag,inv) else
     let bag_size = List.length bag in
     if bag_size=0 then failwith "Empty bag" else 
-      let rand_tile = List.nth bag (Random.int bag_size) in 
-      let new_tile_bag = remove_from_tile_list rand_tile bag in 
-      let new_inv = rand_tile::inv in 
-      from_bag_to_inv new_tile_bag new_inv
+      Random.init (int_of_float (Unix.time ()));
+    let rand_tile = List.nth bag (Random.int bag_size) in 
+    let new_tile_bag = remove_from_tile_list rand_tile bag in 
+    let new_inv = rand_tile::inv in 
+    from_bag_to_inv new_tile_bag new_inv
 
 
 let init_state (num_players: int) : t =

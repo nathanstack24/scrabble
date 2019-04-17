@@ -3,7 +3,7 @@ open Board
 open State
 
 let rec get_next_command (player_id:int) = 
-  print_endline ("Your turn, Player " ^ string_of_int (player_id)) ; (*We'll prob need to pass in players to get_next_command *)
+  print_endline ("Your turn, Player " ^ string_of_int (player_id)) ;
   print_string "> ";
   match read_line () with
   | exception End_of_file -> exit 1
@@ -45,9 +45,19 @@ let rec execute_command (st:State.t) : State.t =
 (*FOR EACH CASE: At end of patternatching, print out board, ask for next command from current_player. *)
 
 
+let initial_commands = 0
+
+
+
+
 let main () =
   ANSITerminal.(print_string [red]
-                  "\n\nWelcome to Scrabble!\n");
+                  "\n\nWelcome to Scrabble!\n\n");
+  (* ANSITerminal.(print_string [green]
+                  "\n\nHow many players?\n\n");
+     match read_line () with
+     | exception End_of_file -> exit 1
+     | text ->  *)
   execute_command (State.init_state 2); ()
 
 (* Execute the game engine. *)

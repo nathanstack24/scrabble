@@ -199,18 +199,38 @@ let rec print_ordered_row = function
   | h::t -> print_string (bsquare_tostring h); print_ordered_row t
   | _ -> print_endline "|"
 
-(*Prints each of the rows on the board.
-  TODO: Ensure that the rows from [get_board_row] are ORDERED left to right.*)
+(** [print_row_num num] prints the given row number to the console. Called 
+  * before printing each row of the Scrabble board. *)
+let print_row_num num = 
+  if (num < 10) then print_string (" " ^(string_of_int num))
+  else print_string (string_of_int num)
+
+(** [print_col_num num stop] prints the given column number [num] to the console 
+  * unless the stop condition [num]=[stop] is met. Called after the entire 
+  * Scrabble board has been printed. *)
+let rec print_col_num (num:int) (stop:int) = 
+  if (num=stop) then print_newline () else
+    print_string ((string_of_int num) ^ " ");
+  print_col_num (num+1) stop
+
+(** [print_board_helper board rowcounter] prints each of the rows on the Scrabble
+  * board [board] with corresponding row identifier [row_counter]. When [rowcounter]
+  * reaches zero, all rows of the Scrabble board have been printed. *)
 let rec print_board_helper board rowcounter: unit = 
   if rowcounter = 0 then ()
-  else (print_ordered_row (List.sort comp_squares_x (get_board_row rowcounter board)); 
-        print_board_helper board (rowcounter - 1); ())
+  else (
+    print_row_num rowcounter;
+    print_ordered_row (List.sort comp_squares_x (get_board_row rowcounter board)); 
+    print_board_helper board (rowcounter - 1); ())
 
 (*Main functionality is in helper. This simply sets the row counter to 1 and 
   lets the helper do the main work. *)
 let print_board board : unit = 
   let n = (List.length (get_board_row 1 board)) in 
-  print_board_helper board n; print_string "\n"
+  print_board_helper board n;
+  print_string "1 2"
+(* print_col_num 1 (n+1) *)
+
 
 (** [new_board_helper r c n] defines a new list of empty board squares with 
     [r] rows and [c] columns. [n] = [c] allows the original value of [c] to 
