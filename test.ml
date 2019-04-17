@@ -77,12 +77,6 @@ let make_board_valid_tests
   name >:: (fun _ -> 
       assert_equal expected_output (is_valid_board board))
 
-let make_board_score_tests  
-    (name : string) 
-    (board: Board.t) 
-    (expected_output : int) : test = 
-  name >:: (fun _ -> 
-      assert_equal expected_output (get_board_score board))
 
 
 let board_tests = [
@@ -100,8 +94,6 @@ let board_tests = [
   make_board_valid_tests "invalid board 5x5 disconnected" board_disc false;
   make_board_valid_tests "invalid board 5x5 vertical ca" boardvertca false;
 
-  make_board_score_tests "empty board score" board5x5 0;
-  make_board_score_tests "empty board score" board5x5cab 7;
 ]
 
 (* scrabble dictionary test cases *)

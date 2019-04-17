@@ -15,6 +15,12 @@ exception Occupied of board_square
 (** Raised when [position] is an invalid position in the board *)
 exception InvalidPos of position
 
+(** Raised when one of the words placed on the board is not in the dictionary*)
+exception BadWord
+
+(** Raised when some of the tiles are not connected to the center tile*)
+exception NotConnected
+
 (** [get_x square] returns the x coordinate of the position of [square]*)
 val get_x : board_square -> int
 

@@ -6,7 +6,6 @@ MAIN=main.byte
 TEST=test.byte
 OCAMLBUILD = ocamlbuild -use-ocamlfind
 
-
 default: build
 	utop
 

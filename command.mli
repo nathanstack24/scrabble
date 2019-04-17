@@ -6,6 +6,8 @@ type command =
   | Inventory
   | Endturn
   | Score
+  | Help
+  | Board
 
 (** The exception raised when a command is malformed*)
 exception Malformed

@@ -7,6 +7,8 @@ type command =
   | Inventory
   | Endturn
   | Score
+  | Help
+  | Board
 
 exception Empty
 exception Malformed
@@ -33,4 +35,6 @@ let parse str : command =
     | "inventory"::t -> Inventory
     | "endturn"::t -> Endturn
     | "score"::t -> Score
+    | "help"::t -> Help
+    | "board"::t -> Board
     | _ -> raise Malformed

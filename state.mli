@@ -50,4 +50,7 @@ val print_board_from_state : t -> unit
 (** returns the current player's id*)
 val get_curr_player_id : t -> int
 
+(** [print_scores state] prints the scores for each player*)
+val print_scores : t -> unit
+
 

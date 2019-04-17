@@ -14,6 +14,8 @@ type t = board_square list
 
 exception Occupied of board_square
 exception InvalidPos of position
+exception NotConnected
+exception BadWord
 
 let get_x (square:board_square) = 
   fst square.pos
@@ -184,8 +186,10 @@ let is_valid_board (board:t) =
   let row_num = List.length (get_board_row 1 board) in  
   let col_num = List.length (get_board_col 1 board) in 
   let center_pos = (col_num/2 + 1, row_num/2 +1 ) in
-  (are_words_valid word_list dict) &&
-  (are_connected_to_center center_pos board)
+  if (are_words_valid word_list dict) then 
+    (if (are_connected_to_center center_pos board) then true else 
+       raise NotConnected)
+  else raise BadWord
 (* Not catching the edge case where there is a single tile in the center*)
 
 (*Returns a string representation of a board_square that looks good for printing.*)
@@ -223,13 +227,19 @@ let rec print_board_helper board rowcounter: unit =
     print_ordered_row (List.sort comp_squares_x (get_board_row rowcounter board)); 
     print_board_helper board (rowcounter - 1); ())
 
+(** [make_x_coord_string col_num] returns the string of integers to be printed
+    at the bottom of a board with [col_num] columns*)
+let rec make_x_coord_string col_num = 
+  let col_str = (string_of_int col_num) in 
+  let last_dig = String.get col_str ((String.length col_str) - 1) in 
+  if col_num = 0 then "" else  make_x_coord_string (col_num-1)^ " " ^ (String.make 1 last_dig)
+
 (*Main functionality is in helper. This simply sets the row counter to 1 and 
   lets the helper do the main work. *)
 let print_board board : unit = 
   let n = (List.length (get_board_row 1 board)) in 
   print_board_helper board n;
-  print_string "1 2"
-(* print_col_num 1 (n+1) *)
+  print_string ("  " ^ (make_x_coord_string n))
 
 
 (** [new_board_helper r c n] defines a new list of empty board squares with 

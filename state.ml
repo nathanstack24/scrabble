@@ -218,6 +218,14 @@ let get_scores (state:t) =
     |h::t -> (h.player_id, h.score)::(loop t)
   in loop state.players
 
+let print_scores (state:t) = 
+  let rec loop players = 
+    match players with 
+    |[] -> print_newline ();
+    |h::t -> print_endline ("Player " ^ (string_of_int h.player_id) ^ ": " ^  
+                            (string_of_int h.score)); (loop t)
+  in loop state.players
+
 (** [add_curr_turn st bsq] returns a new state after adding the board square 
   * [bsq] to state [st]'s curtur's newsquares.*)
 let add_curr_turn st bsq = 

@@ -2,57 +2,102 @@ open Command
 open Board
 open State
 
-let rec get_next_command (player_id:int) = 
+let rec get_next_command (player_id:int) (st:State.t)= 
   print_endline ("Your turn, Player " ^ string_of_int (player_id)) ;
+  let score = List.assoc player_id (State.get_scores st) in
+  print_endline ("Your score is: " ^ (string_of_int score));
+  print_string ("Your letters are: " ); State.print_inventory st; print_newline();
   print_string "> ";
   match read_line () with
   | exception End_of_file -> exit 1
   | text -> 
     try Command.parse text with
     | Command.Malformed -> 
-      print_endline "Bad command. Try again"; get_next_command player_id
-    | Command.Empty -> get_next_command player_id
-    | Failure x -> print_endline "Bad command. Try again"; get_next_command player_id
+      print_endline "Bad command. Try again"; get_next_command player_id st
+    | Command.Empty -> get_next_command player_id st 
+    | Failure x -> print_endline 
+                     "Bad command. Try again. Try help for a list of valid commands"; 
+      get_next_command player_id st
 
 let rec execute_command (st:State.t) : State.t =
   let player_id = get_curr_player_id st in 
-  match get_next_command player_id with 
+  match get_next_command player_id st with 
   | (Command.Quit) -> exit 0
   | (Command.Place (c,pos)) -> (try (let new_st = State.place_tile c pos st in
-                                     print_newline (); 
+                                     print_newline(); 
                                      State.print_board_from_state new_st; 
                                      print_newline(); execute_command new_st)
                                 with State.MisplacedTile -> 
-                                  print_endline "Tile misplaced"; 
+                                  print_newline();
+                                  print_endline "The tile was misplaced, try again"; 
+                                  print_newline(); State.print_board_from_state st; 
                                   print_newline(); execute_command st)
 
   | (Command.Remove mybsquare) -> 
     (try let new_st = (State.remove_tile mybsquare st) in 
-       print_newline();
-       State.print_board_from_state new_st; print_newline(); 
+       print_newline(); State.print_board_from_state new_st; print_newline();
        execute_command new_st
      with 
-     |Not_found -> print_endline "No tile at that position"; print_newline(); 
+     |Not_found -> print_newline(); 
+       print_endline "No tile to be removed at that position"; 
+       print_newline(); State.print_board_from_state st; print_newline(); 
        execute_command st) (*Remove mybsquare from curr_turn. If mybsquare not in curr_turn, *)
 
 
-  | (Command.Inventory) -> State.print_inventory st; print_newline(); execute_command st
-  | (Command.Endturn) -> print_newline(); execute_command (State.end_turn st)
+  | (Command.Inventory) -> print_string ("Your letters are: " ); 
+    State.print_inventory st; print_newline (); execute_command st
+  | (Command.Endturn) -> 
+    (try let new_st = State.end_turn st in 
+       print_newline(); State.print_board_from_state new_st; 
+       print_newline(); ANSITerminal.(print_string [green] "Great turn! \n"); execute_command (new_st)
+     with 
+     |Board.BadWord -> print_newline(); State.print_board_from_state st; 
+       print_newline(); ANSITerminal.(print_string [red]
+                                        "Some words on the board are not valid. Try again. \n");
+       execute_command st
+     |Board.NotConnected -> 
+       print_newline(); State.print_board_from_state st; 
+       print_newline(); 
+       ANSITerminal.(print_string [red]
+                       "Some tiles on the board are not connected to the center tile. Try again \n"); 
+       execute_command st)
 
-  | (Command.Score) -> let scores = List.assoc player_id (State.get_scores st) in
-    print_endline ("Player " ^ string_of_int (player_id) ^ " score: " ^ string_of_int (scores)); 
+  | (Command.Score) -> State.print_scores st; execute_command st
+
+  | (Command.Help) ->   print_newline(); ANSITerminal.(print_string [green]
+                                                         "The commands are 
+        place [Char] [x_pos] [y_pos] to place tile [Char] at ([pos_x], [pos_y])
+        remove [x_pos] [y_pos] to remove the tile at ([pos_x], [pos_y])
+        inventory to check the letters in your inventory
+        score to print all players' scores
+        board to print out the current board
+        endturn to end your turn; if your moves are not valid, all newly placed tiles will be returned to you
+        help to print this message again
+        quit to quit\n \n"); 
     print_newline(); execute_command st
-(*FOR EACH CASE: At end of patternatching, print out board, ask for next command from current_player. *)
 
+  |Command.Board -> print_newline(); State.print_board_from_state st; print_newline(); execute_command st
 
 let initial_commands = 0
-
-
-
 
 let main () =
   ANSITerminal.(print_string [red]
                   "\n\nWelcome to Scrabble!\n\n");
+  ANSITerminal.(print_string [blue] "The game currently has 2 Players
+For a turn to be valid, all words placed must be in the Scrabble dictionary
+and all tiles must be connected to the center (8,8) \n\n");
+  ANSITerminal.(print_string [green]
+                  "The commands are 
+        place [Char] [x_pos] [y_pos]
+        remove [x_pos] [y_pos]
+        inventory 
+        score
+        board
+        endturn
+        help
+        quit \n \n");
+  ANSITerminal.(print_string [red] "Your board:");
+  print_newline(); State.print_board_from_state (State.init_state 2); print_newline();
   (* ANSITerminal.(print_string [green]
                   "\n\nHow many players?\n\n");
      match read_line () with
