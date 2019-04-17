@@ -49,25 +49,30 @@ let make_board_square (c:char option) (row:int) (col:int) : board_square =
 let set_square (tile:tile) (pos:position) (board:t): t = 
   set_square_helper [] tile pos board
 
+(** [get_neighbors square board] returns a list of the boards niehgboring 
+    [square] in [board]*)
+let get_neighbors (p:position) (pos_list: position list) = 
+  List.filter (fun p_neigh -> 
+      (snd p = snd p_neigh && 
+       (fst p = fst p_neigh + 1 || fst p = fst p_neigh - 1)) ||
+      (fst p = fst p_neigh && 
+       (snd p = snd p_neigh + 1 || snd p = snd p_neigh - 1 ))) pos_list
+
 (** [connected_to_center center_pos board] Returns a list of all of the occupied
     board_squares with a path from the center center*)
 let connected_to_center (center_pos:position) (board:t)=
-  let rec bfs (connected:position list) (visited:position list) (queue:board_square list) (pos_list:position list)= 
+  let rec bfs (connected:position list) (visited:position list) (queue:board_square list) (pos_list:position list) board= 
     match queue with 
     |{pos = p; occ = Some tile}::t ->
       (* Check that there is > 0 elements within 1 square of the square
          being visited*)
-      let neigh_list = (List.filter (fun p_neigh -> 
-          (snd p = snd p_neigh && 
-           (fst p = fst p_neigh + 1 || fst p = fst p_neigh - 1)) ||
-          (fst p = fst p_neigh && 
-           (snd p = snd p_neigh + 1 || snd p = snd p_neigh - 1 )) &&
-          List.mem p_neigh visited = false) pos_list) in 
-      bfs (neigh_list @ connected) (p::visited) t pos_list
-    |{pos = p; occ = _ }::t -> bfs connected (p::visited) t pos_list
-    |[] -> connected
-  in bfs [] [] ((get_square center_pos board)::[]) 
-    (List.map (fun square -> get_pos square) board)
+      let neigh_list = List.filter (fun el -> (List.mem el visited) = false) (get_neighbors p pos_list) in 
+      let neigh_squares = List.map (fun pos -> get_square pos board) neigh_list in 
+      bfs (neigh_list @ connected) (p::visited) (neigh_squares@t) pos_list board
+    |{pos = p; occ = _ }::t -> bfs connected (p::visited) t pos_list board
+    |[] -> List.filter (fun pos -> get_occ (get_square pos board) <> None) connected
+  in bfs (center_pos::[]) [] ((get_square center_pos board)::[]) 
+    (List.map (fun square -> get_pos square) board) board
 
 (** [are_connected_to_center center_pos board] returns whether all tiles on 
     the board have a tile path to the center tile on the board*)
@@ -83,18 +88,18 @@ let rec are_connected_to_center (center_pos:position) (board:t)=
 (** [first_letter_squares_pos board] returns the positions of the first letters
     of each word on the board*)
 let first_letter_squares_pos (board:t) = 
-  let rec loop (unvisited:board_square list) (acc:position list) board= 
+  let rec loop (unvisited:board_square list) (acc:position list) (board:t)= 
     match unvisited with 
-    |[] -> []
+    |[] -> acc
     |{pos=p; occ = None}::t -> loop t acc board
     |h::t when (get_x h = 1 || get_y h = 1)-> loop t ((get_pos h)::acc) board
     |{pos=p; occ = Some tile}::t ->  
-      let up:position = (fst p, snd p + 1) in 
-      let left:position = (fst p + 1, snd p) in 
+      let (up:position) = (fst p, (snd p)+1) in 
+      let (left:position) = (fst p - 1, snd p) in 
       if get_occ (get_square up board) = None &&
          get_occ(get_square left board) = None then
-        loop t (p::acc) board else loop t acc board
-  in loop board [] board 
+        loop t (p::acc) board else loop t acc board in 
+  loop board [] board 
 
 (** [get_board_row r board] returns all the board_squares in [board] in row 
     [r]*)
@@ -133,7 +138,7 @@ let find_word_row (first_letter_pos:position) (board:t)=
   let rec loop lst c word = 
     match lst with 
     |{pos = (x, _); occ = _}::t when x < c -> loop t c word
-    |{pos = (x, _); occ = Some tile}::t -> loop t c word^(String.make 1 tile)
+    |{pos = (x, _); occ = Some tile}::t -> loop t c (word^(String.make 1 tile))
     |{pos = (x, _); occ = None}::t -> word
     |[] -> word 
   in loop sorted_row col_ind ""
@@ -144,9 +149,9 @@ let find_word_column (first_letter_pos:position) (board:t)=
   let row_ind = snd first_letter_pos in
   let rec loop lst r word = 
     match lst with 
-    |{pos = (x, _); occ = _}::t when x < r -> loop t r word
-    |{pos = (x, _); occ = Some tile}::t -> loop t r word^(String.make 1 tile)
-    |{pos = (x, _); occ = None}::t -> word
+    |{pos = (_, x); occ = _}::t when x < r -> loop t r word
+    |{pos = (_, x); occ = Some tile}::t -> loop t r (word^(String.make 1 tile))
+    |{pos = (_, x); occ = None}::t -> word
     |[] -> word 
   in loop sorted_col row_ind ""
 
@@ -195,16 +200,16 @@ let rec print_ordered_row = function
 
 (*Prints each of the rows on the board.
   TODO: Ensure that the rows from [get_board_row] are ORDERED left to right.*)
-let rec print_board_helper board n rowcounter: unit = 
-  if rowcounter > n then ()
-  else (print_ordered_row (get_board_row rowcounter board); 
-        print_board_helper board n (rowcounter + 1); ())
+let rec print_board_helper board rowcounter: unit = 
+  if rowcounter = 0 then ()
+  else (print_ordered_row (List.sort comp_squares_x (get_board_row rowcounter board)); 
+        print_board_helper board (rowcounter - 1); ())
 
 (*Main functionality is in helper. This simply sets the row counter to 1 and 
   lets the helper do the main work. *)
 let print_board board : unit = 
   let n = (List.length (get_board_row 1 board)) in 
-  print_board_helper board n 1
+  print_board_helper board n
 
 (** [new_board_helper r c n] defines a new list of empty board squares with 
     [r] rows and [c] columns. [n] = [c] allows the original value of [c] to 
