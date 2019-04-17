@@ -12,10 +12,11 @@ let rec get_next_command (player_id:int) =
     | Command.Malformed -> 
       print_endline "Bad command. Try again"; get_next_command player_id
     | Command.Empty -> get_next_command player_id
+    | Failure x -> print_endline "Bad command. Try again"; get_next_command player_id
 
 let rec execute_command (st:State.t) : State.t =
   let player_id = get_curr_player_id st in 
-  match get_next_command player_id with (** the Unit should instead be a player ID *)
+  match get_next_command player_id with 
   | (Command.Quit) -> exit 0
   | (Command.Place (c,pos)) -> (try (let new_st = State.place_tile c pos st in
                                      print_newline (); 

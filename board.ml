@@ -235,7 +235,20 @@ let rec merge_boards (board1:board_square list) (board2:t) : t  =
       merge_boards t (set_square tile p board2) else raise (InvalidPos p)
 
 let make_pos col row:position = (col, row)
-let make_tile c:tile = c
+
+(** [i -- j] is the list of integers from [i] to [j], inclusive.
+    Tail recursive. *)
+let (--) (i : int) (j : int) : int list =
+  let rec from i j l =
+    if i>j then l
+    else from i (j-1) (j::l)
+  in from i j []
+
+let make_tile c:tile = 
+  let code = (Char.code c) in 
+  let range = 65 -- 90 in 
+  if (List.mem code range) then c else failwith "Not a valid character. Try again"
+
 
 let rec get_word_score (word:string) (n:int) : int = 
   if n = 0 then 0 else 
@@ -260,4 +273,4 @@ let get_board_score (old_board:t) (new_board:t)=
 
 
 
-let print_tile (tile:tile) = print_char tile 
+let print_tile (tile:tile) = print_char tile
