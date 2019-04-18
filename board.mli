@@ -21,6 +21,9 @@ exception BadWord
 (** Raised when some of the tiles are not connected to the center tile*)
 exception NotConnected
 
+(** Raised when only one letter placed in the center of the board*)
+exception OneLetter
+
 (** [get_x square] returns the x coordinate of the position of [square]*)
 val get_x : board_square -> int
 

@@ -75,6 +75,14 @@ let rec execute_command (st:State.t) : State.t =
                        ("Some tiles on the board are not connected to the " ^ 
                         "center tile. Try again \n")); 
        execute_command st
+     |Board.OneLetter ->
+       print_newline(); State.print_board_from_state st; 
+       print_newline(); 
+       ANSITerminal.(print_string [red]
+                       ("Words placed must be at least 2 letters long. " ^ 
+                        "Try again \n")); 
+       execute_command st
+
      | State.EndGame -> print_newline(); 
        ANSITerminal.(print_string [green]
                        "The Game is Over! Here are the final scores: \n\n");

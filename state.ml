@@ -214,24 +214,23 @@ let rec print_tile_list = function
 
 let end_turn state =
   (* TODO: add more explicit error handling for this case in is_valid_board *)
-  if (List.length state.curr_turn.new_squares <= 1) then raise Board.BadWord else 
-    let curr_board = state.curr_turn.new_squares in 
-    let merged_board = merge_boards curr_board state.board in 
-    let curr_player = state.curr_turn.curr_player in 
-    let id = curr_player.player_id in 
-    let next = next_player id state.players in 
-    if is_valid_board merged_board = true then 
-      let new_data = replenish_inventory state in
-      let new_players = fst new_data in 
-      let new_bag = snd new_data in 
-      {players = new_players; 
-       board = merged_board;
-       curr_turn = {curr_player = next; new_squares = []};
-       tile_bag = new_bag} 
-    else 
-      {state with 
-       curr_turn = {curr_player = get_player_from_id id state.players;
-                    new_squares = []}}
+  let curr_board = state.curr_turn.new_squares in 
+  let merged_board = merge_boards curr_board state.board in 
+  let curr_player = state.curr_turn.curr_player in 
+  let id = curr_player.player_id in 
+  let next = next_player id state.players in 
+  if is_valid_board merged_board = true then 
+    let new_data = replenish_inventory state in
+    let new_players = fst new_data in 
+    let new_bag = snd new_data in 
+    {players = new_players; 
+     board = merged_board;
+     curr_turn = {curr_player = next; new_squares = []};
+     tile_bag = new_bag} 
+  else 
+    {state with 
+     curr_turn = {curr_player = get_player_from_id id state.players;
+                  new_squares = []}}
 
 let get_scores (state:t) = 
   let rec loop players = 

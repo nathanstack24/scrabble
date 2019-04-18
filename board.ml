@@ -16,6 +16,7 @@ exception Occupied of board_square
 exception InvalidPos of position
 exception NotConnected
 exception BadWord
+exception OneLetter
 
 let get_x (square:board_square) = 
   fst square.pos
@@ -25,7 +26,6 @@ let get_y (square:board_square) =
 
 let get_pos (square:board_square) = 
   square.pos
-
 
 let get_occ (square:board_square) = 
   square.occ
@@ -52,7 +52,7 @@ let make_board_square (c:char option) (row:int) (col:int) : board_square =
 let set_square (tile:tile) (pos:position) (board:t): t = 
   set_square_helper [] tile pos board
 
-(** [get_neighbors square board] returns a list of the boards niehgboring 
+(** [get_neighbors square board] returns a list of the boards neighboring 
     [square] in [board]*)
 let get_neighbors (p:position) (pos_list: position list) = 
   List.filter (fun p_neigh -> 
@@ -111,6 +111,7 @@ let get_board_col c board =
 
 let first_letter_squares_row (board:t) = 
   let rec loop (unvisited:board_square list) (acc:position list) (board:t)= 
+    let col_num = List.length (get_board_row 1 board) in
     match unvisited with 
     |[] -> acc
     |{pos=p; occ = None}::t -> loop t acc board
@@ -118,10 +119,12 @@ let first_letter_squares_row (board:t) =
       let (right:position) = ((fst p) + 1, snd p) in 
       if (get_occ (get_square right board) <> None) then loop t (p::acc) board
       else loop t acc board
+    |{pos=p; occ = Some tile}::t when fst p = col_num -> loop t acc board
     |{pos=p; occ = Some tile}::t ->  
       let (left:position) = ((fst p) - 1, snd p) in 
       let (right:position) = ((fst p) + 1, snd p) in
-      if ((get_occ(get_square left board) = None) && (get_occ (get_square right board) <> None)) then
+      if ((get_occ(get_square left board) = None) && 
+          (get_occ (get_square right board) <> None)) then
         loop t (p::acc) board else loop t acc board in 
   loop board [] board 
 
@@ -129,17 +132,20 @@ let first_letter_squares_row (board:t) =
     of each column word on the board*)
 let first_letter_squares_col (board:t) = 
   let rec loop (unvisited:board_square list) (acc:position list) (board:t)= 
+    let row_num = List.length (get_board_col 1 board) in
     match unvisited with 
     |[] -> acc
     |{pos=p; occ = None}::t -> loop t acc board
-    |{pos=p; occ = Some tile}::t when snd p = List.length (get_board_col 1 board) -> 
+    |{pos=p; occ = Some tile}::t when snd p = row_num -> 
       let (down:position) = (fst p, (snd p) - 1) in 
       if (get_occ (get_square down board) <> None) then loop t (p::acc) board
       else loop t acc board
+    |{pos=p; occ = Some tile}::t when snd p = 1 -> loop t acc board
     |{pos=p; occ = Some tile}::t ->  
       let (up:position) = (fst p, (snd p)+1) in 
       let (down:position) = (fst p, (snd p) - 1) in 
-      if ((get_occ (get_square up board) = None) && (get_occ (get_square down board) <> None))
+      if ((get_occ (get_square up board) = None) &&
+          (get_occ (get_square down board) <> None))
       then loop t (p::acc) board else loop t acc board in 
   loop board [] board 
 
@@ -231,8 +237,11 @@ let is_valid_board (board:t) =
   let col_num = List.length (get_board_col 1 board) in 
   let center_pos = (col_num/2 + 1, row_num/2 +1 ) in
   if (are_words_valid word_list dict) then 
-    (if (are_connected_to_center center_pos board) then true else 
-       raise NotConnected)
+    (if (are_connected_to_center center_pos board) then 
+       (if (List.length word_list = 0) && 
+           (get_occ (get_square center_pos board)) <> None then raise OneLetter 
+        else true)
+     else raise NotConnected)
   else raise BadWord
 (* Not catching the edge case where there is a single tile in the center*)
 
