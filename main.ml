@@ -15,8 +15,8 @@ let rec get_next_command (player_id:int) (st:State.t)=
     | Command.Malformed -> 
       print_endline "Bad command. Try again"; get_next_command player_id st
     | Command.Empty -> get_next_command player_id st 
-    | Failure x -> print_endline 
-                     "Bad command. Try again. Try help for a list of valid commands"; 
+    | Failure x -> 
+      print_endline "Bad command. Enter 'help' for a list of valid commands"; 
       get_next_command player_id st
 
 let rec execute_command (st:State.t) : State.t =
@@ -41,42 +41,52 @@ let rec execute_command (st:State.t) : State.t =
      |Not_found -> print_newline(); 
        print_endline "No tile to be removed at that position"; 
        print_newline(); State.print_board_from_state st; print_newline(); 
-       execute_command st) (*Remove mybsquare from curr_turn. If mybsquare not in curr_turn, *)
-
+       execute_command st) 
 
   | (Command.Inventory) -> print_string ("Your letters are: " ); 
     State.print_inventory st; print_newline (); execute_command st
   | (Command.Endturn) -> 
     (try let new_st = State.end_turn st in 
        print_newline(); State.print_board_from_state new_st; 
-       print_newline(); ANSITerminal.(print_string [green] "Great turn! \n"); execute_command (new_st)
+       print_newline(); ANSITerminal.(print_string [green] "Great turn! \n"); 
+       execute_command (new_st)
      with 
      |Board.BadWord -> print_newline(); State.print_board_from_state st; 
        print_newline(); ANSITerminal.(print_string [red]
-                                        "Some words on the board are not valid. Try again. \n");
+                                        ("Some words on the board are not "^
+                                         "valid. Try again. \n"));
        execute_command st
      |Board.NotConnected -> 
        print_newline(); State.print_board_from_state st; 
        print_newline(); 
        ANSITerminal.(print_string [red]
-                       "Some tiles on the board are not connected to the center tile. Try again \n"); 
-       execute_command st)
+                       ("Some tiles on the board are not connected to the " ^ 
+                        "center tile. Try again \n")); 
+       execute_command st
+     | State.EndGame -> print_newline(); 
+       ANSITerminal.(print_string [green]
+                       "The Game is Over! Here are the final scores: \n\n");
+       State.print_scores st;
+
+       exit 0)
 
   | (Command.Score) -> State.print_scores st; execute_command st
 
   | (Command.Help) ->   print_newline(); ANSITerminal.(print_string [green]
                                                          "The commands are 
-        place [Char] [x_pos] [y_pos] to place tile [Char] at ([pos_x], [pos_y])
-        remove [x_pos] [y_pos] to remove the tile at ([pos_x], [pos_y])
-        inventory to check the letters in your inventory
-        score to print all players' scores
-        board to print out the current board
-        endturn to end your turn; if your moves are not valid, your turn will not end
-        help to print this message again
-        quit to quit\n \n"); 
+      place [Char] [x_pos] [y_pos] to place tile [Char] at ([pos_x], [pos_y])
+      remove [x_pos] [y_pos] to remove the tile at ([pos_x], [pos_y])
+      inventory to check the letters in your inventory
+      score to print all players' scores
+      board to print out the current board
+      endturn to end your turn; if your moves are not valid, your turn will 
+      not end until you play a valid word.
+      help to print this message again
+      quit to quit\n \n"); 
     print_newline(); execute_command st
 
-  |Command.Board -> print_newline(); State.print_board_from_state st; print_newline(); execute_command st
+  |Command.Board -> print_newline(); State.print_board_from_state st;
+    print_newline(); execute_command st
 
 let initial_commands = 0
 
@@ -97,7 +107,8 @@ and all tiles must be connected to the center (8,8) \n\n");
         help
         quit \n \n");
   ANSITerminal.(print_string [red] "Your board:");
-  print_newline(); State.print_board_from_state (State.init_state 2); print_newline();
+  print_newline(); State.print_board_from_state (State.init_state 2); 
+  print_newline();
   (* ANSITerminal.(print_string [green]
                   "\n\nHow many players?\n\n");
      match read_line () with

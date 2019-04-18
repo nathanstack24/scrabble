@@ -21,6 +21,7 @@ type t = {
 exception MisplacedTile
 exception NotPlaced
 exception EmptyBoardSquare
+exception EndGame
 
 (** [remove_from_tile_list tile lst] returns the tile list [lst] without the 
     first occurence of [tile]. Raises Not_found if tile is not in the tile 
@@ -33,8 +34,8 @@ let remove_from_tile_list (tile:tile) (lst: tile list) =
     |[] -> raise (Not_found)
   in loop [] tile lst  
 
-(** [make_tile_bag char_lst acc] returns the list of tiles corresponding to a list 
-    of chars*)
+(** [make_tile_bag char_lst acc] returns the list of tiles corresponding to a
+    list of chars*)
 let rec make_tile_bag (char_lst: char list) (acc:tile list) : tile list = 
   match char_lst with
   |[] -> acc
@@ -50,7 +51,7 @@ let rec from_bag_to_inv (bag: tile list) (inv: tile list) =
   let size = List.length inv in
   if (size=7) then (bag,inv) else
     let bag_size = List.length bag in
-    if bag_size=0 then failwith "Empty bag" else 
+    if bag_size=0 then raise EndGame else 
       Random.init (int_of_float (Unix.time ()));
     let rand_tile = List.nth bag (Random.int bag_size) in 
     let new_tile_bag = remove_from_tile_list rand_tile bag in 
@@ -60,7 +61,7 @@ let rec from_bag_to_inv (bag: tile list) (inv: tile list) =
 
 let init_state (num_players: int) : t =
   if num_players<2 then failwith "Error: need at least two players" else 
-    let rec create_players (num:int) (acc:player list) (bag: tile list) : (tile list * player list) = 
+    let rec create_players (num:int) (acc:player list) (bag: tile list) = 
       if num=0 then (bag,acc) else 
         let new_data = from_bag_to_inv bag [] in 
         let new_bag = fst new_data in 
@@ -121,7 +122,8 @@ let place_tile (tile:tile) (pos:position) (state:t) =
     let board_square = get_square pos state.board in 
     if get_occ board_square = None then
       if is_in_line board_square state.curr_turn then 
-        let new_inv = remove_from_tile_list tile state.curr_turn.curr_player.inv in
+        let new_inv = remove_from_tile_list 
+            tile state.curr_turn.curr_player.inv in
         let new_square = set_occ board_square tile in
         let new_curr_turn = 
           {curr_player = {state.curr_turn.curr_player with inv= new_inv}; 
@@ -137,11 +139,12 @@ let remove_tile (pos:position) (board:t) =
   (** TODO: implement error handling with this case. Raises Not_Found if no
       square placed by the user in this turn is located at pos *)
   let tile = List.find (fun square -> (get_pos square) = pos) placed_squares in
-  let new_placed_squares = List.filter (fun square -> (get_pos square)<>pos) placed_squares in 
+  let new_placed_squares = List.filter 
+      (fun square -> (get_pos square)<>pos) placed_squares in 
   match (get_occ tile) with 
   | None -> raise Not_found
   | Some t -> let tile = t in 
-    let new_player = { player with inv= tile::board.curr_turn.curr_player.inv } in
+    let new_player = {player with inv=tile::board.curr_turn.curr_player.inv } in
     let new_curr_turn = {
       curr_player= new_player;
       new_squares=new_placed_squares;} in 
@@ -170,11 +173,14 @@ let rec replenish_inventory (board: t) : player list * tile list =
   let curr_board = board.board in 
   let new_board = merge_boards board.curr_turn.new_squares curr_board in 
   let new_score = get_new_score curr_board new_board in
-  let updated_player = {player with inv = new_inv; score=(player.score + new_score); } in 
-  let players = List.filter (fun player -> player.player_id<>updated_player.player_id) board.players in 
+  let updated_player = {player with inv = new_inv; 
+                                    score=(player.score + new_score); } in 
+  let players = List.filter 
+      (fun p -> p.player_id<>updated_player.player_id) board.players in 
   (List.sort comp_players (updated_player::players), new_bag)
 
-(** [get_player_from_id id player_list] returns the player in [player_list] with [id]*)
+(** [get_player_from_id id player_list] returns the player in [player_list] 
+  * with player id [id] *)
 let rec get_player_from_id id player_list= 
   match player_list with
   |h::t when h.player_id = id -> h
@@ -226,6 +232,16 @@ let print_scores (state:t) =
                             (string_of_int h.score)); (loop t)
   in loop state.players
 
+let print_winner (state:t) = 
+  let rec loop players winner : player = 
+    match players with 
+    | [] -> winner;
+    | h::t -> if (h.score>winner.score) then loop t h else loop t winner 
+  in 
+  let winner = loop state.players (List.hd state.players) in 
+  print_endline 
+    ("Player " ^(string_of_int winner.player_id) ^ " is the winner!")
+
 (** [add_curr_turn st bsq] returns a new state after adding the board square 
   * [bsq] to state [st]'s curtur's newsquares.*)
 let add_curr_turn st bsq = 
@@ -233,7 +249,8 @@ let add_curr_turn st bsq =
   let ct = st.curr_turn in 
   {st with curr_turn={ct with new_squares=newsq}}
 
-let print_board_from_state st = Board.print_board (merge_boards st.curr_turn.new_squares st.board)
+let print_board_from_state st = Board.print_board 
+    (merge_boards st.curr_turn.new_squares st.board)
 
 
 let print_inventory st = print_tile_list st.curr_turn.curr_player.inv

@@ -17,6 +17,10 @@ type curr_turn
 (** The exception type returned when a tile is placed in a way that is illegal*)
 exception MisplacedTile
 
+(** Raised when the tile bag is empty, which we are treating as the end 
+  * condition in this sprint of the assignment (for simplicity).  *)
+exception EndGame
+
 exception NotPlaced
 
 (** [init_state num_players] is the initial state of the Scrabble game with
@@ -52,5 +56,9 @@ val get_curr_player_id : t -> int
 
 (** [print_scores state] prints the scores for each player*)
 val print_scores : t -> unit
+
+(** [print_winner state] prints the winner, who is the player with the most
+  * number of points when the game ends. *)
+val print_winner: t -> unit
 
 

@@ -87,21 +87,8 @@ let rec are_connected_to_center (center_pos:position) (board:t)=
     |[] -> true
   in loop connected_squares board
 
-(** [first_letter_squares_pos board] returns the positions of the first letters
-    of each word on the board*)
-let first_letter_squares_pos (board:t) = 
-  let rec loop (unvisited:board_square list) (acc:position list) (board:t)= 
-    match unvisited with 
-    |[] -> acc
-    |{pos=p; occ = None}::t -> loop t acc board
-    |h::t when (get_x h = 1 || get_y h = 1)-> loop t ((get_pos h)::acc) board
-    |{pos=p; occ = Some tile}::t ->  
-      let (up:position) = (fst p, (snd p)+1) in 
-      let (left:position) = (fst p - 1, snd p) in 
-      if get_occ (get_square up board) = None &&
-         get_occ(get_square left board) = None then
-        loop t (p::acc) board else loop t acc board in 
-  loop board [] board 
+(** [first_letter_squares_row board] returns the positions of the first letters
+    of each row word on the board*)
 
 (** [get_board_row r board] returns all the board_squares in [board] in row 
     [r]*)
@@ -120,6 +107,40 @@ let get_board_col c board =
     |[] -> acc
     |h::t -> if get_x h = c then (loop c t (h::acc)) else loop c t acc
   in loop c board []
+
+let first_letter_squares_row (board:t) = 
+  let rec loop (unvisited:board_square list) (acc:position list) (board:t)= 
+    match unvisited with 
+    |[] -> acc
+    |{pos=p; occ = None}::t -> loop t acc board
+    |{pos=p; occ = Some tile}::t when fst p = 1 -> 
+      let (right:position) = ((fst p) + 1, snd p) in 
+      if (get_occ (get_square right board) <> None) then loop t (p::acc) board
+      else loop t acc board
+    |{pos=p; occ = Some tile}::t ->  
+      let (left:position) = ((fst p) - 1, snd p) in 
+      let (right:position) = ((fst p) + 1, snd p) in
+      if ((get_occ(get_square left board) = None) && (get_occ (get_square right board) <> None)) then
+        loop t (p::acc) board else loop t acc board in 
+  loop board [] board 
+
+(** [first_letter_squares_col board] returns the positions of the first letters
+    of each column word on the board*)
+let first_letter_squares_col (board:t) = 
+  let rec loop (unvisited:board_square list) (acc:position list) (board:t)= 
+    match unvisited with 
+    |[] -> acc
+    |{pos=p; occ = None}::t -> loop t acc board
+    |{pos=p; occ = Some tile}::t when snd p = List.length (get_board_col 1 board) -> 
+      let (down:position) = (fst p, (snd p) - 1) in 
+      if (get_occ (get_square down board) <> None) then loop t (p::acc) board
+      else loop t acc board
+    |{pos=p; occ = Some tile}::t ->  
+      let (up:position) = (fst p, (snd p)+1) in 
+      let (down:position) = (fst p, (snd p) - 1) in 
+      if ((get_occ (get_square up board) = None) && (get_occ (get_square down board) <> None))
+      then loop t (p::acc) board else loop t acc board in 
+  loop board [] board 
 
 (** comparison function for sorting squares by the x coordinate of their 
     position*)
@@ -157,20 +178,42 @@ let find_word_column (first_letter_pos:position) (board:t)=
     |[] -> word 
   in loop sorted_col row_ind ""
 
-let word_list_from_board (board:t) = 
-  let first_letters = first_letter_squares_pos board in
+(** prints a position*)
+let print_pos (pos:position) = (print_int (fst pos)); print_string " , ";  (print_int (snd pos))
+
+(** prints a list of positions*)
+let rec print_pos_list = function 
+    [] -> ()
+  | e::l -> print_pos e ; print_string " " ; print_pos_list l
+
+let rec remove_dups rec_list acc = 
+  match rec_list with
+  |[] -> acc
+  |h::t -> if (List.mem h acc) = false then remove_dups t (h::acc) else remove_dups t acc
+
+let word_list_from_board_col (board:t) = 
+  let first_letters = remove_dups (first_letter_squares_col board) [] in
+  let rec loop pos_list board = 
+    match pos_list with
+    |[] -> []
+    |h::t ->
+      let col_word = find_word_column h board in 
+      let col_word_len = String.length col_word in 
+      if col_word_len > 1 then 
+        col_word::loop t board
+      else loop t board
+  in loop first_letters board
+
+let word_list_from_board_row (board:t) = 
+  let first_letters = remove_dups (first_letter_squares_row board) [] in
   let rec loop pos_list board = 
     match pos_list with
     |[] -> []
     |h::t ->
       let row_word = find_word_row h board in 
-      let col_word = find_word_column h board in 
-      let row_word_len = String.length row_word in
-      let col_word_len = String.length col_word in 
-      if row_word_len > 1 && col_word_len > 1 then 
-        row_word::col_word::loop t board
-      else if row_word_len > 1 && col_word_len <= 1 then row_word::loop t board 
-      else if row_word_len <= 1 && col_word_len > 1 then col_word::loop t board
+      let row_word_len = String.length row_word in 
+      if row_word_len > 1 then 
+        row_word::loop t board
       else loop t board
   in loop first_letters board
 
@@ -182,7 +225,7 @@ let rec are_words_valid word_list dict =
   |[] -> true
 
 let is_valid_board (board:t) = 
-  let word_list = word_list_from_board board in
+  let word_list = (word_list_from_board_row board) @ (word_list_from_board_col board) in
   let row_num = List.length (get_board_row 1 board) in  
   let col_num = List.length (get_board_col 1 board) in 
   let center_pos = (col_num/2 + 1, row_num/2 +1 ) in
@@ -279,10 +322,9 @@ let make_tile c:tile =
   let range = 65 -- 90 in 
   if (List.mem code range) then c else failwith "Not a valid character. Try again"
 
-
 let rec get_word_score (word:string) (n:int) : int = 
   if n = 0 then 0 else 
-    let curr_char = String.get word (n-1) in 
+    let curr_char = String.get word (n-1) in
     let char_score = Values.find curr_char tile_values in 
     char_score + get_word_score word (n-1)
 
@@ -292,8 +334,10 @@ let get_word_difference wordlist1 wordlist2 =
   List.filter (fun w2-> List.mem w2 wordlist1 = false) wordlist2
 
 let get_board_score (old_board:t) (new_board:t)= 
-  let old_words = word_list_from_board old_board in 
-  let all_words = word_list_from_board new_board in 
+  let old_words = (word_list_from_board_row old_board) @ 
+                  (word_list_from_board_col old_board) in 
+  let all_words = (word_list_from_board_row new_board) @ 
+                  (word_list_from_board_col new_board) in 
   let new_words = get_word_difference old_words all_words in
   let rec loop words = 
     match words with 
