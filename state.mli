@@ -66,4 +66,12 @@ val print_scores : t -> unit
   * number of points when the game ends. *)
 val print_winner: t -> unit
 
+(**  [get_state_word_diff old_state new_state] returns the new words formed
+     on the board in [new_state]*)
+val get_state_word_diff : t -> t -> string list
+
+(** [get_state_score_diff old_state new_state] returns the new score gained
+    from the newly formed words in [new_state]*)
+val get_state_score_diff : t -> t -> int
+
 

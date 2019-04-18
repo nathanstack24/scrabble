@@ -186,7 +186,7 @@ let rec replenish_inventory (board: t) : player list * tile list =
   let new_inv = snd new_data in
   let curr_board = board.board in 
   let new_board = merge_boards board.curr_turn.new_squares curr_board in 
-  let new_score = get_new_score curr_board new_board in
+  let new_score = Board.get_board_score curr_board new_board in
   let updated_player = {player with inv = new_inv; 
                                     score=(player.score + new_score); } in 
   let players = List.filter 
@@ -273,3 +273,8 @@ let print_inventory st = print_tile_list st.curr_turn.curr_player.inv
 
 let get_curr_player_id st = st.curr_turn.curr_player.player_id
 
+let get_state_word_diff old_state new_state = 
+  get_board_word_diff old_state.board new_state.board
+
+let get_state_score_diff old_state new_state = 
+  get_board_score old_state.board new_state.board

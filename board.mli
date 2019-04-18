@@ -89,3 +89,7 @@ val get_board_score : t -> t -> int
 
 (** prints the character on a tile*)
 val print_tile : tile -> unit
+
+(** [get_board_word_diff old_board new_board] returns the list of words that is
+    different between [old_board] and [new_board]*)
+val get_board_word_diff : t -> t -> string list

@@ -2,6 +2,14 @@ open Command
 open Board
 open State
 
+(** [print_word_list word_lst] returns the string of  all the words in a 
+    [word_lst], separated by commas*)
+let rec word_list_to_string word_lst = 
+  match word_lst with 
+  |[] -> ""
+  |h::[] -> h
+  |h::t -> h ^ ", " ^ (word_list_to_string t)
+
 let rec get_next_command (player_id:int) (st:State.t)= 
   print_endline ("Your turn, Player " ^ string_of_int (player_id)) ;
   let score = List.assoc player_id (State.get_scores st) in
@@ -59,9 +67,14 @@ let rec execute_command (st:State.t) : State.t =
     State.print_inventory st; print_newline (); execute_command st
   | (Command.Endturn) -> 
     (try let new_st = State.end_turn st in 
+       let new_words = State.get_state_word_diff st new_st in
+       let points = State.get_state_score_diff st new_st in
        print_newline(); State.print_board_from_state new_st; 
-       print_newline(); ANSITerminal.(print_string [green] "Great turn! \n"); 
-       execute_command (new_st)
+       print_newline(); ANSITerminal.(print_string [green] 
+                                        ("Great turn!
+You made the following word(s): " ^ (word_list_to_string new_words) ^ "\n" ^
+                                         "You earned " ^ (string_of_int points) ^ " points" ));  
+       print_newline(); execute_command (new_st)
      with 
      |Board.BadWord -> print_newline(); State.print_board_from_state st; 
        print_newline(); ANSITerminal.(print_string [red]

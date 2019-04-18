@@ -355,6 +355,16 @@ let get_board_score (old_board:t) (new_board:t)=
     |[] -> 0
   in loop new_words
 
-
+let get_board_word_diff old_board new_board =
+  let old_words = (word_list_from_board_row old_board) @ 
+                  (word_list_from_board_col old_board) in 
+  let all_words = (word_list_from_board_row new_board) @ 
+                  (word_list_from_board_col new_board) in 
+  let new_words = get_word_difference old_words all_words in
+  let rec loop words = 
+    match words with 
+    |h::t -> h :: (loop t)
+    |[] -> []
+  in loop new_words
 
 let print_tile (tile:tile) = print_char tile
