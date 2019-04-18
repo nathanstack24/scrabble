@@ -267,9 +267,7 @@ let add_curr_turn st bsq =
 let print_board_from_state st = Board.print_board 
     (merge_boards st.curr_turn.new_squares st.board)
 
-
 let print_inventory st = print_tile_list st.curr_turn.curr_player.inv
-
 
 let get_curr_player_id st = st.curr_turn.curr_player.player_id
 

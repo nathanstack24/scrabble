@@ -161,6 +161,8 @@ let comp_squares_y square1 square2 =
   if get_y square1 = get_y square2 then 0
   else if get_y square1 > get_y square2 then -1 else 1
 
+(** [find_word_row pos board] finds the horizontal word starting at [pos] of 
+    [board]*)
 let find_word_row (first_letter_pos:position) (board:t)= 
   let row_ind = snd first_letter_pos in
   let sorted_row = List.sort comp_squares_x (get_board_row row_ind board) in 
@@ -173,6 +175,8 @@ let find_word_row (first_letter_pos:position) (board:t)=
     |[] -> word 
   in loop sorted_row col_ind ""
 
+(** [find_word_col pos board] finds the vertical word starting at [pos] of 
+    [board]*)
 let find_word_column (first_letter_pos:position) (board:t)= 
   let col_ind = fst first_letter_pos in
   let sorted_col = List.sort comp_squares_y (get_board_col col_ind board) in 
@@ -185,19 +189,24 @@ let find_word_column (first_letter_pos:position) (board:t)=
     |[] -> word 
   in loop sorted_col row_ind ""
 
-(** prints a position*)
-let print_pos (pos:position) = (print_int (fst pos)); print_string " , ";  (print_int (snd pos))
+(** [print_pos] prints the position [pos] to the terminal*)
+let print_pos (pos:position) = 
+  (print_int (fst pos)); print_string " , ";  (print_int (snd pos))
 
 (** prints a list of positions*)
 let rec print_pos_list = function 
     [] -> ()
   | e::l -> print_pos e ; print_string " " ; print_pos_list l
 
-let rec remove_dups rec_list acc = 
-  match rec_list with
+(** [remove_dups list acc] returns [list] with no duplicate entries*)
+let rec remove_dups lst acc = 
+  match lst with
   |[] -> acc
-  |h::t -> if (List.mem h acc) = false then remove_dups t (h::acc) else remove_dups t acc
+  |h::t -> if (List.mem h acc) = false then remove_dups t (h::acc) 
+    else remove_dups t acc
 
+(** [word_list_from_board_col board] returns a list of all the vertical words on
+    [board]*)
 let word_list_from_board_col (board:t) = 
   let first_letters = remove_dups (first_letter_squares_col board) [] in
   let rec loop pos_list board = 
@@ -211,6 +220,8 @@ let word_list_from_board_col (board:t) =
       else loop t board
   in loop first_letters board
 
+(** [word_list_from_board_row board] returns a list of all the horizontal words 
+    on [board]*)
 let word_list_from_board_row (board:t) = 
   let first_letters = remove_dups (first_letter_squares_row board) [] in
   let rec loop pos_list board = 
@@ -243,9 +254,9 @@ let is_valid_board (board:t) =
         else true)
      else raise NotConnected)
   else raise BadWord
-(* Not catching the edge case where there is a single tile in the center*)
 
-(*Returns a string representation of a board_square that looks good for printing.*)
+(*[bsquare_tostring bsquare] Returns a string representation of a board_square 
+  that looks good for printing for the GUI.*)
 let bsquare_tostring bsquare = 
   match bsquare.occ with
   | Some ti -> ("|" ^ (String.make 1 ti))
