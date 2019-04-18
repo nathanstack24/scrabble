@@ -29,8 +29,10 @@ let square12A = set_occ square12emp a
 let board2x2a = set_square a pos12 board2x2
 let board5x5c = set_square c pos33 board5x5 (* 5x5 board (3,3):c *)
 let board5x5ca = set_square a pos43 board5x5c (* 5x5 board (3,3):c, (4,3):a *)
-let board5x5cab = set_square b pos53 board5x5ca (* 5x5 board (3,3):c, (4,3):a, (5,3):b *)
-let board_disc = set_square b pos11 (set_square a pos12 board5x5cab) (* 5x5 board (1,1):a, (1,2):b, (3,3):c, (4,3):a, (5,3):b *)
+(* 5x5 board (3,3):c, (4,3):a, (5,3):b *)
+let board5x5cab = set_square b pos53 board5x5ca 
+(* 5x5 board (1,1):a, (1,2):b, (3,3):c, (4,3):a, (5,3):b *)
+let board_disc = set_square b pos11 (set_square a pos12 board5x5cab) 
 let square43a = make_board_square (Some 'A') 4 3
 let boardvertca = set_square a pos32 board5x5c
 let boardvertcab = set_square b pos31 board5x5c
@@ -66,7 +68,12 @@ let make_board_valid_tests
   name >:: (fun _ -> 
       assert_equal expected_output (is_valid_board board))
 
-
+let make_bad_boards_tests
+    (name : string) 
+    (board: Board.t) 
+    (exn: exn): test = 
+  name >:: (fun _ -> 
+      assert_raises exn (fun () -> is_valid_board board))
 
 let board_tests = [
   make_get_pos_tests "get pos 1, 1" square11emp pos11;
@@ -79,10 +86,29 @@ let board_tests = [
   make_merge_boards_tests "merge boards 5x5 ca" (square43a::[]) board5x5c board5x5ca;
 
   make_board_valid_tests "valid board 5x5 cab" board5x5cab true;
-  make_board_valid_tests "invalid board 5x5 ca" board5x5ca false;
-  make_board_valid_tests "invalid board 5x5 disconnected" board_disc false;
-  make_board_valid_tests "invalid board 5x5 vertical ca" boardvertca false;
+  make_bad_boards_tests "invalid board 5x5 ca" board5x5ca BadWord;
+  make_bad_boards_tests "invalid board 5x5 disconnected" board_disc NotConnected;
+  make_bad_boards_tests "invalid board 5x5 vertical ca" boardvertca BadWord;
+  make_bad_boards_tests "invalid board 5x5 c" board5x5c OneLetter;
 ]
+
+(* state test cases*)
+let state_init = init_state 2
+let state_2 = State.end_turn state_init
+let state_3 = State.end_turn state_2
+let make_get_curr_player_tests 
+    (name : string) 
+    (state: State.t) 
+    (exp: int): test = 
+  name >:: (fun _ -> 
+      assert_equal exp (get_curr_player_id state))
+
+let state_tests = [
+  make_get_curr_player_tests "init player id" state_init 1;
+  make_get_curr_player_tests "endturn player id" state_2 2;
+  make_get_curr_player_tests "2*endturn player id" state_3 1;
+]
+
 
 (* scrabble dictionary test cases *)
 let dict = create_dictionary
@@ -131,6 +157,7 @@ let suite = "Scrabble test suite" >::: List.flatten [
     board_tests;
     dictionary_tests;
     tile_values_tests;
+    state_tests
   ]
 
 let _ = run_test_tt_main suite
