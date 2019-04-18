@@ -21,7 +21,12 @@ exception MisplacedTile
   * condition in this sprint of the assignment (for simplicity).  *)
 exception EndGame
 
-exception NotPlaced
+(** Raised when the player tries to place a tile on a preoccupied board square*)
+exception Occupied
+
+(** Raised when the player tries to place a tile which they don't have in their
+  * inventory *)
+exception NotInInv
 
 (** [init_state num_players] is the initial state of the Scrabble game with
   * [num_players] players. *)

@@ -26,6 +26,7 @@ let get_y (square:board_square) =
 let get_pos (square:board_square) = 
   square.pos
 
+
 let get_occ (square:board_square) = 
   square.occ
 

@@ -4,17 +4,6 @@ open Command
 open State
 open Dictionary
 
-(********************************************************************
-   Here are some helper functions for your testing of set-like lists. 
- ********************************************************************)
-let cmp_set_like_lists lst1 lst2 =
-  let uniq1 = List.sort_uniq compare lst1 in
-  let uniq2 = List.sort_uniq compare lst2 in
-  List.length lst1 = List.length uniq1
-  &&
-  List.length lst2 = List.length uniq2
-  &&
-  uniq1 = uniq2
 
 (* BOARD test cases*)
 
@@ -93,7 +82,6 @@ let board_tests = [
   make_board_valid_tests "invalid board 5x5 ca" board5x5ca false;
   make_board_valid_tests "invalid board 5x5 disconnected" board_disc false;
   make_board_valid_tests "invalid board 5x5 vertical ca" boardvertca false;
-
 ]
 
 (* scrabble dictionary test cases *)
@@ -137,13 +125,6 @@ let tile_values_tests = [
   make_tile_value_tests "K" 'K' 5;
   make_tile_value_tests "Q" 'Q' 10;
   make_tile_value_tests "Z" 'Z' 10;
-]
-
-(* state tests *)
-let initial_state = init_state 2
-
-let state_tests = [
-
 ]
 
 let suite = "Scrabble test suite" >::: List.flatten [

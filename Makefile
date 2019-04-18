@@ -16,6 +16,7 @@ build:
 	$(OCAMLBUILD) $(OBJECTS)
 
 play:
+	export OCAMLRUNPARAM='l=5555555555'
 	$(OCAMLBUILD) $(MAIN) && ./$(MAIN)
 
 test:

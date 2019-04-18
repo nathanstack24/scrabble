@@ -19,9 +19,10 @@ type t = {
 }
 
 exception MisplacedTile
-exception NotPlaced
 exception EmptyBoardSquare
 exception EndGame
+exception Occupied
+exception NotInInv
 
 (** [remove_from_tile_list tile lst] returns the tile list [lst] without the 
     first occurence of [tile]. Raises Not_found if tile is not in the tile 
@@ -110,6 +111,19 @@ let same_y (square: board_square) (curr_turn:curr_turn) =
       loop (acc && (y=sq_y)) sq_y t
   in loop true sq_y new_squares
 
+
+(** [get_occ_state sq] returns the tile option at [sq]. Checks both the board
+  * itself and the tiles placed by the player. *)
+let get_occ_state (state: t) (square:board_square) : tile option = 
+  let placed_tiles = state.curr_turn.new_squares in 
+  match get_occ square with 
+  | None -> (try 
+               let tile = List.find 
+                   (fun tile -> (get_pos tile)=(get_pos square)) placed_tiles in 
+               get_occ tile
+             with Not_found -> None)
+  | Some tile -> Some tile
+
 (** [is_in_line tile curr_turn] returns true if tile is in the same column or
     in the same row as all of the other newly placed tiles in the turn 
     Otherwise raises MisplacedTile*)
@@ -120,7 +134,7 @@ let is_in_line (square:board_square) (curr_turn:curr_turn) =
 let place_tile (tile:tile) (pos:position) (state:t) = 
   if is_in_inv tile state.curr_turn then
     let board_square = get_square pos state.board in 
-    if get_occ board_square = None then
+    if get_occ_state state board_square = None then
       if is_in_line board_square state.curr_turn then 
         let new_inv = remove_from_tile_list 
             tile state.curr_turn.curr_player.inv in
@@ -130,8 +144,8 @@ let place_tile (tile:tile) (pos:position) (state:t) =
            new_squares = new_square::state.curr_turn.new_squares} in 
         {state with curr_turn=new_curr_turn}
       else state
-    else state
-  else state
+    else raise Occupied
+  else raise NotInInv
 
 let remove_tile (pos:position) (board:t) = 
   let placed_squares = board.curr_turn.new_squares in 
@@ -198,24 +212,26 @@ let rec print_tile_list = function
     [] -> ()
   | e::l -> print_tile e ; print_string " " ; print_tile_list l
 
-let end_turn state = 
-  let curr_board = state.curr_turn.new_squares in 
-  let merged_board = merge_boards curr_board state.board in 
-  let curr_player = state.curr_turn.curr_player in 
-  let id = curr_player.player_id in 
-  let next = next_player id state.players in 
-  if is_valid_board merged_board = true then 
-    let new_data = replenish_inventory state in
-    let new_players = fst new_data in 
-    let new_bag = snd new_data in 
-    {players = new_players; 
-     board = merged_board;
-     curr_turn = {curr_player = next; new_squares = []};
-     tile_bag = new_bag} 
-  else 
-    {state with 
-     curr_turn = {curr_player = get_player_from_id id state.players;
-                  new_squares = []}}
+let end_turn state =
+  (* TODO: add more explicit error handling for this case in is_valid_board *)
+  if (List.length state.curr_turn.new_squares <= 1) then raise Board.BadWord else 
+    let curr_board = state.curr_turn.new_squares in 
+    let merged_board = merge_boards curr_board state.board in 
+    let curr_player = state.curr_turn.curr_player in 
+    let id = curr_player.player_id in 
+    let next = next_player id state.players in 
+    if is_valid_board merged_board = true then 
+      let new_data = replenish_inventory state in
+      let new_players = fst new_data in 
+      let new_bag = snd new_data in 
+      {players = new_players; 
+       board = merged_board;
+       curr_turn = {curr_player = next; new_squares = []};
+       tile_bag = new_bag} 
+    else 
+      {state with 
+       curr_turn = {curr_player = get_player_from_id id state.players;
+                    new_squares = []}}
 
 let get_scores (state:t) = 
   let rec loop players = 

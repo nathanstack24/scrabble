@@ -27,11 +27,23 @@ let rec execute_command (st:State.t) : State.t =
                                      print_newline(); 
                                      State.print_board_from_state new_st; 
                                      print_newline(); execute_command new_st)
-                                with State.MisplacedTile -> 
+                                with 
+                                | State.MisplacedTile -> 
                                   print_newline();
                                   print_endline "The tile was misplaced, try again"; 
                                   print_newline(); State.print_board_from_state st; 
-                                  print_newline(); execute_command st)
+                                  print_newline(); execute_command st
+                                | State.NotInInv ->
+                                  ANSITerminal.print_string [ANSITerminal.red] 
+                                    "That letter is not in your inventory. Try again.";
+                                  print_newline();
+                                  execute_command st;
+                                | State.Occupied -> 
+                                  ANSITerminal.print_string [ANSITerminal.red] 
+                                    "That board square is already occupied. Try again.";
+                                  print_newline();
+                                  execute_command st;)
+
 
   | (Command.Remove mybsquare) -> 
     (try let new_st = (State.remove_tile mybsquare st) in 
@@ -106,7 +118,7 @@ and all tiles must be connected to the center (8,8) \n\n");
         endturn
         help
         quit \n \n");
-  ANSITerminal.(print_string [red] "Your board:");
+  ANSITerminal.(print_string [red] "The board:");
   print_newline(); State.print_board_from_state (State.init_state 2); 
   print_newline();
   (* ANSITerminal.(print_string [green]
