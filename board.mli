@@ -1,3 +1,4 @@
+(** The abstract type for a Scrabble board *)
 type t
 
 (** The type representing a letter tile *)
@@ -21,8 +22,13 @@ exception BadWord
 (** Raised when some of the tiles are not connected to the center tile*)
 exception NotConnected
 
-(** Raised when only one letter placed in the center of the board*)
+(** Raised when only one letter placed in the center of the board and the user
+  * attempts to end their turn. *)
 exception OneLetter
+
+(** Raised when the user tries to place a tile which is not an alphabetically
+  * character *)
+exception InvalidChar
 
 (** [get_x square] returns the x coordinate of the position of [square]*)
 val get_x : board_square -> int
@@ -51,26 +57,20 @@ val set_square : tile -> position -> t -> t
   * If there exists no position [pos] in [t], raises   *)
 val get_square : position -> t -> board_square
 
-(** Returns true if all the following conditions are true, false otherwise:
-    1. All words are actually words. 
-    2. All occupied board_squares are adjacent to at least one other 
-    occupied board_square 
-    3. There is a path from the center board_square to any other occupied 
-    board square 
-
-    ALGO IDEAS:
-    a. First, make a list of occupied board squares. Then, recursively iterate 
-    from the start square through all of the squares in adjacent, add them to 
-    the list of board squares. Check the equivalence of these two lists.
-    b. Next, to check words iterate through all rows & cols, add a word when 
-    there is a group of occupied board squares that are broken by an
-    unoccupied board square. 
-*)
+(** [is_valid_board b] returns true if all the following conditions are true, 
+    false otherwise:
+    1. All words in board [b] are words in the Scrabble dictionary. 
+    2. All occupied board squares in [b] are adjacent to at least one other 
+    occupied board square 
+    3. There is a path from the center board square to any other occupied 
+    board square *)
 val is_valid_board : t -> bool
 
-(** Return an empty board full of size [n]x[n]*)
+(** [new_board len] Return an empty board of size [len]x[len]*)
 val new_board : int -> t
 
+(** [make_board_square c x y] returns a [board_square] at position [(x,y)] 
+  * occupied by [c] *)
 val make_board_square : char option -> int -> int -> board_square
 
 (** [merg_boards board1 board2] adds the occupied squares in [board1] to 

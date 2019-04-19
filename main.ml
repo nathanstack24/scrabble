@@ -126,9 +126,13 @@ let initial_commands = 0
 let main () =
   ANSITerminal.(print_string [red]
                   "\n\nWelcome to Scrabble!\n\n");
+  flush stdout;
+  Unix.sleepf 1.5;
   ANSITerminal.(print_string [blue] "The game currently has 2 Players
 For a turn to be valid, all words placed must be in the Scrabble dictionary
 and all tiles must be connected to the center (8,8) \n\n");
+  Pervasives.flush stdout;
+  Unix.sleepf 4.0;
   ANSITerminal.(print_string [green]
                   "The commands are 
         place [Char] [x_pos] [y_pos]
@@ -139,14 +143,13 @@ and all tiles must be connected to the center (8,8) \n\n");
         endturn
         help
         quit \n \n");
+  Pervasives.flush stdout;
+  Unix.sleepf 4.0;
   ANSITerminal.(print_string [red] "The board:");
+  Pervasives.flush stdout;
+  Unix.sleep 1;
   print_newline(); State.print_board_from_state (State.init_state 2); 
   print_newline();
-  (* ANSITerminal.(print_string [green]
-                  "\n\nHow many players?\n\n");
-     match read_line () with
-     | exception End_of_file -> exit 1
-     | text ->  *)
   execute_command (State.init_state 2); ()
 
 (* Execute the game engine. *)

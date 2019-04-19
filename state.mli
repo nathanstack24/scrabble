@@ -28,6 +28,10 @@ exception Occupied
   * inventory *)
 exception NotInInv
 
+(** Raised in the beginning of the game if the user tries to initialize a game
+  * with less than two players. *)
+exception InvalidNumPlayers
+
 (** [init_state num_players] is the initial state of the Scrabble game with
   * [num_players] players. *)
 val init_state : int -> t 
@@ -71,7 +75,8 @@ val print_winner: t -> unit
 val get_state_word_diff : t -> t -> string list
 
 (** [get_state_score_diff old_state new_state] returns the new score gained
-    from the newly formed words in [new_state]*)
+    from the newly formed words in [new_state] by substracting the sum of the
+    scores in [new_state] from the sum of the scores in [old_state] *)
 val get_state_score_diff : t -> t -> int
 
 

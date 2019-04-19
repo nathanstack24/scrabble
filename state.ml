@@ -23,6 +23,7 @@ exception EmptyBoardSquare
 exception EndGame
 exception Occupied
 exception NotInInv
+exception InvalidNumPlayers
 
 (** [remove_from_tile_list tile lst] returns the tile list [lst] without the 
     first occurence of [tile]. Raises Not_found if tile is not in the tile 
@@ -213,7 +214,6 @@ let rec print_tile_list = function
   | e::l -> print_tile e ; print_string " " ; print_tile_list l
 
 let end_turn state =
-  (* TODO: add more explicit error handling for this case in is_valid_board *)
   let curr_board = state.curr_turn.new_squares in 
   let merged_board = merge_boards curr_board state.board in 
   let curr_player = state.curr_turn.curr_player in 

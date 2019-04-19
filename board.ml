@@ -17,6 +17,7 @@ exception InvalidPos of position
 exception NotConnected
 exception BadWord
 exception OneLetter
+exception InvalidChar
 
 let get_x (square:board_square) = 
   fst square.pos
@@ -88,8 +89,6 @@ let rec are_connected_to_center (center_pos:position) (board:t)=
     |[] -> true
   in loop connected_squares board
 
-(** [first_letter_squares_row board] returns the positions of the first letters
-    of each row word on the board*)
 
 (** [get_board_row r board] returns all the board_squares in [board] in row 
     [r]*)
@@ -338,10 +337,10 @@ let (--) (i : int) (j : int) : int list =
     else from i (j-1) (j::l)
   in from i j []
 
-let make_tile c:tile = 
+let make_tile (c:char) : tile = 
   let code = (Char.code c) in 
   let range = 65 -- 90 in 
-  if (List.mem code range) then c else failwith "Not a valid character. Try again"
+  if (List.mem code range) then c else raise InvalidChar
 
 let rec get_word_score (word:string) (n:int) : int = 
   if n = 0 then 0 else 

@@ -29,7 +29,7 @@ let parse_text (l: string list) =
   words
 
 (** [add_words_to_dict list txt acc] returns a set with every word in   
-  * list [word] added to the set [acc] (which is acting as our Scrabble dictionary). 
+  * list [word] added to the set [acc] (which is our Scrabble dictionary). 
   * Requires: - [list] is a string list where each element is a word in
   *             text file "scrabble_dict.txt".
   *           - [acc] is a   *)
@@ -41,7 +41,7 @@ let rec add_words_to_dict (words: string list) (acc:Dict.t) =
 
 let create_dictionary =
   try 
-    let dict_text_file = Unix.getcwd() ^ Filename.dir_sep ^ "scrabble_dict.txt" in
+    let dict_text_file = Unix.getcwd() ^Filename.dir_sep^ "scrabble_dict.txt" in
     let channel = Pervasives.open_in dict_text_file in
     let all_words_list = read_channel channel [] in       
     let all_words = parse_text all_words_list in 
@@ -52,10 +52,11 @@ let create_dictionary =
 
 (** [point_values] is a list of tuples containing all letters in the alphabet
   * and the number of points associated with that letter *)
-let point_values = [('A',1); ('E',1); ('I',1); ('O',1); ('U',1); ('L',1); ('N',1); 
-                    ('S',1); ('T',1); ('R',1); ('D',2); ('G',2); ('B',3); ('C',3); 
-                    ('M',3); ('P',3); ('F',4); ('H',4); ('V',4); ('W',4); ('Y',4);
-                    ('K',5); ('J',8); ('X',8); ('Q',10); ('Z',10)]
+let point_values = [('A',1); ('E',1); ('I',1); ('O',1); ('U',1); ('L',1); 
+                    ('N',1); ('S',1); ('T',1); ('R',1); ('D',2); ('G',2); 
+                    ('B',3); ('C',3); ('M',3); ('P',3); ('F',4); ('H',4); 
+                    ('V',4); ('W',4); ('Y',4); ('K',5); ('J',8); ('X',8); 
+                    ('Q',10); ('Z',10)]
 
 
 let tile_values = 

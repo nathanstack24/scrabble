@@ -147,7 +147,8 @@ let board_tests = [
     (InvalidPos posneg);
 
   make_merge_boards_tests "merge boards 5x5 c" ([]) board5x5c board5x5c;
-  make_merge_boards_tests "merge boards 5x5 ca" (square43a::[]) board5x5c board5x5ca;
+  make_merge_boards_tests "merge boards 5x5 ca" 
+    (square43a::[]) board5x5c board5x5ca;
 
   make_board_valid_tests "valid board 5x5 cab" board5x5cab true;
   make_bad_boards_tests "invalid board 5x5 ca" board5x5ca BadWord;
@@ -168,13 +169,25 @@ let board_tests = [
   make_board_word_diff_tests "5x5 cab -> cab ab be be word diff" 
     board5x5cab board5x5cabbe
     ["AB"; "BE"; "BE"];
-
 ]
 
 (* state test cases*)
 let state_init = init_state 2
 let state_2 = State.end_turn state_init
 let state_3 = State.end_turn state_2
+
+let bad_state_1 = fun () -> init_state 1
+let bad_state_0 = fun () -> init_state 0
+let bad_state_neg = fun () -> init_state (-1)
+
+let make_bad_state_init_tests
+    (name : string) 
+    (func: unit -> State.t) = 
+  name >:: 
+  (fun _ -> assert_raises (InvalidNumPlayers) (func))
+
+let make_
+
 let make_get_curr_player_tests 
     (name : string) 
     (state: State.t) 
@@ -183,6 +196,10 @@ let make_get_curr_player_tests
       assert_equal exp (get_curr_player_id state))
 
 let state_tests = [
+  make_bad_state_init_tests "state with one player" bad_state_1;
+  make_bad_state_init_tests "state with zero players" bad_state_0;
+  make_bad_state_init_tests "state with negative players" bad_state_neg;
+
   make_get_curr_player_tests "init player id" state_init 1;
   make_get_curr_player_tests "endturn player id" state_2 2;
   make_get_curr_player_tests "2*endturn player id" state_3 1;

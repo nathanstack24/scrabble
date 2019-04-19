@@ -1,5 +1,5 @@
 open Board
-(* Note: You may introduce new code anywhere in this file. *) 
+
 type command = 
   | Quit
   | Place of tile*position
