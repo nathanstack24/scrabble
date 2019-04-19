@@ -178,6 +178,7 @@ let state_3 = State.end_turn state_2
 
 let bad_state_1 = fun () -> init_state 1
 let bad_state_0 = fun () -> init_state 0
+let bad_state_5 = fun () -> init_state 5
 let bad_state_neg = fun () -> init_state (-1)
 
 let make_bad_state_init_tests
@@ -185,8 +186,6 @@ let make_bad_state_init_tests
     (func: unit -> State.t) = 
   name >:: 
   (fun _ -> assert_raises (InvalidNumPlayers) (func))
-
-let make_
 
 let make_get_curr_player_tests 
     (name : string) 
@@ -199,10 +198,14 @@ let state_tests = [
   make_bad_state_init_tests "state with one player" bad_state_1;
   make_bad_state_init_tests "state with zero players" bad_state_0;
   make_bad_state_init_tests "state with negative players" bad_state_neg;
+  make_bad_state_init_tests "state with more than 4 players" bad_state_5;
 
   make_get_curr_player_tests "init player id" state_init 1;
   make_get_curr_player_tests "endturn player id" state_2 2;
   make_get_curr_player_tests "2*endturn player id" state_3 1;
+
+  "get_scores test" >:: (fun _ -> 
+      assert_equal [(1,0);(2,0)] (get_scores state_3));
 ]
 
 
@@ -253,7 +256,7 @@ let suite = "Scrabble test suite" >::: List.flatten [
     board_tests;
     dictionary_tests;
     tile_values_tests;
-    state_tests
+    state_tests;
   ]
 
 let _ = run_test_tt_main suite

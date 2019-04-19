@@ -73,7 +73,7 @@ val new_board : int -> t
   * occupied by [c] *)
 val make_board_square : char option -> int -> int -> board_square
 
-(** [merg_boards board1 board2] adds the occupied squares in [board1] to 
+(** [merge_boards board1 board2] adds the occupied squares in [board1] to 
     [board2] if they are unoccupied. Requires that [board1] be a subset of 
     [board2] *)
 val merge_boards : board_square list -> t -> t
@@ -87,7 +87,7 @@ val make_tile : char -> tile
 (** [get_board_score board] returns the score value of all the words on [board]*)
 val get_board_score : t -> t -> int
 
-(** prints the character on a tile*)
+(** [print_tile tile] prints the character on [tile] *)
 val print_tile : tile -> unit
 
 (** [get_board_word_diff old_board new_board] returns the list of words that is

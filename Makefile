@@ -1,7 +1,7 @@
 MODULES=board command state main dictionary
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
-MLIS=$(MODULES:=.ml)
+MLIS=$(MODULES:=.mli)
 MAIN=main.byte
 TEST=test.byte
 OCAMLBUILD = ocamlbuild -use-ocamlfind
@@ -14,7 +14,7 @@ check:
 	bash checkenv.sh && bash checktypes.sh
 
 build:
-	$(OCAMLBUILD) $(OBJECTS)
+	$(OCAMLBUILD) $(OBJECTS) 
 
 play:
 	$(OCAMLBUILD) $(MAIN) && OCAMLRUNPARAM="l=5555555555" ./$(MAIN)
@@ -24,7 +24,7 @@ docs: docs-public docs-private
 docs-public: build
 	mkdir -p doc.public
 	ocamlfind ocamldoc -I _build -package $(PKGS) \
-		-hide-warnings
+		-hide-warnings \
 		-html -stars -d doc.public $(MLIS)
 
 docs-private: build
@@ -38,4 +38,7 @@ test:
 
 clean:
 	ocamlbuild -clean
-	rm -rf doc.public doc.private adv.zip
+	rm -rf doc.public doc.private scrabble.zip
+
+zip:
+	zip scrabble.zip *.ml* *.txt _tags Makefile

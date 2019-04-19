@@ -15,8 +15,10 @@ exception Malformed
 (** The exception raised when a command is empty*)
 exception Empty
 
-(** Takes in a command string, cleans it to be interpreted. *)
+(** [clean_str strs] removes any whitespace in all strings in
+    string list [strs]. *)
 val clean_str : string list -> string list
 
-(**Converts the user input string to a command.*)
+(** [parse str] performs the appropriate command based on the user-inputed
+    string [str]. If the user inputs nothing, no command is executed.  *)
 val parse : string -> command

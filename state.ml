@@ -62,7 +62,7 @@ let rec from_bag_to_inv (bag: tile list) (inv: tile list) =
 
 
 let init_state (num_players: int) : t =
-  if num_players<2 then failwith "Error: need at least two players" else 
+  if (num_players<2 || num_players>4) then raise InvalidNumPlayers else 
     let rec create_players (num:int) (acc:player list) (bag: tile list) = 
       if num=0 then (bag,acc) else 
         let new_data = from_bag_to_inv bag [] in 

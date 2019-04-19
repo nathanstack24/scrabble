@@ -13,16 +13,12 @@ type command =
 exception Empty
 exception Malformed
 
-(** [clean_str] removes any excess spaces. *)
 let rec clean_str (lst:string list) : (string list) =
   match lst with
   | [] -> []
   | h::t -> if String.equal h "" then clean_str t
     else h::clean_str t
 
-(** [parse] performs the appropriate command given the user-inputed string. If 
-    the command is empty, we will not do anything. If the command is "quit," we
-    will quit, etc.*)
 let parse str : command =
   let cmd = (clean_str (String.split_on_char ' ' (String.trim str))) in
   if List.length cmd = 0 then raise Empty else 

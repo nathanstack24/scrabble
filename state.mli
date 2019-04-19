@@ -37,30 +37,35 @@ exception InvalidNumPlayers
 val init_state : int -> t 
 
 (** [place_tile t p curr_turn] updates the curr_turn with tile t at 
-    position p and removes it from the current player's inventory 
-    Raises Misplaced_tile  *)
+    position p and removes it from the current player's inventory. 
+    Raises Misplaced_tile is the player places a tile illegally (i.e. if the
+    tile is placed so that it is disconnected from previously placed tiles) *)
 val place_tile : Board.tile -> Board.position -> t -> t
 
-(** [remove_tile p curr_turn] removes the tile at position p from the placed 
-    tiles in curr_turn.  *)
+(** [remove_tile p st] removes the tile at position [p] from the placed 
+    tiles in the current turn in state [t].  *)
 val remove_tile : Board.position -> t -> t
 
-(** [end_turn] returns a new state t based on the actions performed by the 
+(** [end_turn] returns a new state based on the actions performed by the 
     player in curr_turn. If the conditions for a valid board are met,
-    updates the current player's score and replenishes their inventory, 
-    else returns their tiles to them and resets the turn *)
+    the current player's score is updated and their inventory is replenished. 
+    Otherwise, prints a helpful error message and the players turn continues. 
+
+    Raises: *)
 val end_turn : t -> t
 
-(** [get_scores] returns a tuple containing the score for each player in the game *)
+(** [get_scores] returns a tuple containing the score for each player 
+    in the game in the form 
+    [[(player1, player1's score); (player2, player2's score); ...]] . *)
 val get_scores : t -> (int*int) list
 
-(** prints the current player's inventory*)
+(** [print_inventory state] prints the current player's inventory *)
 val print_inventory : t -> unit
 
-(** prints the board in the current state*)
+(** [print_board_from_state st] prints the Scrabble board in state [st] *)
 val print_board_from_state : t -> unit
 
-(** returns the current player's id*)
+(** [get_curr_player_id st] returns the current player's id in state [st] *)
 val get_curr_player_id : t -> int
 
 (** [print_scores state] prints the scores for each player*)
@@ -70,8 +75,10 @@ val print_scores : t -> unit
   * number of points when the game ends. *)
 val print_winner: t -> unit
 
-(**  [get_state_word_diff old_state new_state] returns the new words formed
-     on the board in [new_state]*)
+(** [get_state_word_diff old_state new_state] returns the new words formed
+     on the board in [new_state] by returning a list of strings which are
+     words on the board in [new_state] are not words on the board in
+    [old_state] *)
 val get_state_word_diff : t -> t -> string list
 
 (** [get_state_score_diff old_state new_state] returns the new score gained
