@@ -276,3 +276,78 @@ let get_state_word_diff old_state new_state =
 
 let get_state_score_diff old_state new_state = 
   get_board_score old_state.board new_state.board
+
+
+
+(** [try_each_tile pos state] returns all the states that are 
+    valid from trying each tile from [t_lst] at [pos]*)
+let rec try_each_tile (pos:Board.position) (state:t) : t list=
+  let inv = state.curr_turn.curr_player.inv in
+  let rec loop acc t_lst pos state = 
+    match t_lst with 
+    |[] -> acc
+    |h::t -> try 
+        let new_state = place_tile h pos state in 
+        loop (new_state::acc) t pos state
+      with
+      |InvalidPos pos -> raise (InvalidPos pos)
+  in loop [] inv pos state
+
+let try_letter_col (start_row:int) (col:int) (row_num:int) (st : t) = 
+  let rec loop (acc: t list) (col:int) (start_row:int) (st_lst:t list) = 
+    match st_lst with 
+    |state::st_lst2 -> 
+      if start_row > row_num then acc else 
+        let pos = make_pos col start_row in
+        let inv = state.curr_turn.curr_player.inv in
+        if inv = [] then acc else
+          (try 
+             let new_lst1 = (try_each_tile pos state) @ acc in(* list of boards with new tile placed at pos*)
+             let new_lst2 = (try_each_tile pos state) @ st_lst2 in
+             loop new_lst1 (start_row) col new_lst2
+           with 
+           |Occupied -> loop acc col (start_row+1) st_lst)
+    |[] -> acc
+  in loop [] col start_row [st]
+
+let rec try_letter_row (start_col:int) (row:int) (col_num:int) (st : t) = 
+  let rec loop (acc: t list) (start_col:int) (row:int) (st_lst:t list) = 
+    match st_lst with 
+    |state::st_lst2 -> 
+      if start_col > col_num then acc else 
+        let pos = make_pos start_col row in
+        let inv = state.curr_turn.curr_player.inv in
+        if inv = [] then acc else
+          (try 
+             let new_lst1 = (try_each_tile pos state) @ acc in(* list of boards with new tile placed at pos*)
+             let new_lst2 = (try_each_tile pos state) @ st_lst2 in
+             loop new_lst1 start_col row new_lst2
+           with 
+           |Occupied -> loop acc (start_col+1) row st_lst)
+    |[] -> acc
+  in loop [] start_col row [st]
+
+(** [all_word_states state] returns a list of all of the possible states *)
+let all_word_states (state:t) = 
+  let pos_list = get_board_positions state.board in 
+  let col_num = get_col_num state.board in 
+  let row_num = get_row_num state.board in 
+  let rec loop pos_list acc= 
+    match pos_list with 
+    |[] -> acc
+    |h::t -> let x = get_x_pos h in 
+      let y = get_y_pos h in 
+      let row_words = try_letter_row x y col_num state in 
+      let col_words = try_letter_col x y row_num state in 
+      loop t ((row_words @ col_words) @ acc)
+  in loop pos_list [state]
+
+let rec perfect_turn state = 
+  let rec loop max_score_state state_lst init_state =
+    match state_lst with 
+    |[] -> max_score_state 
+    |state::t -> if (get_new_score init_state.board state.board) > 
+                    (get_new_score init_state.board max_score_state.board) 
+      then loop state t init_state 
+      else loop max_score_state state_lst init_state
+  in loop state (all_word_states state) state

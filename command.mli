@@ -8,6 +8,7 @@ type command =
   | Score
   | Help
   | Board
+  | Perfect
 
 (** The exception raised when a command is malformed*)
 exception Malformed

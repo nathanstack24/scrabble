@@ -86,4 +86,6 @@ val get_state_word_diff : t -> t -> string list
     scores in [new_state] from the sum of the scores in [old_state] *)
 val get_state_score_diff : t -> t -> int
 
+val perfect_turn : t -> t
+
 
