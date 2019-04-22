@@ -10,7 +10,7 @@ let rec word_list_to_string word_lst =
   |h::[] -> h
   |h::t -> h ^ ", " ^ (word_list_to_string t)
 
-let rec get_next_command (player_id:int) (st:State.t)= 
+let rec get_next_command (player_id:int) (st:State.t) = 
   print_endline ("Your turn, Player " ^ string_of_int (player_id)) ;
   let score = List.assoc player_id (State.get_scores st) in
   print_endline ("Your score is: " ^ (string_of_int score));
@@ -124,10 +124,48 @@ You made the following word(s): " ^ (word_list_to_string new_words) ^ "\n" ^
 let initial_commands = 0
 
 let main () =
-  ANSITerminal.(print_string [red]
-                  "\n\nWelcome to Scrabble!\n\n");
+  (* ANSITerminal.save_cursor (); *)
+  let cursor = ANSITerminal.pos_cursor () in 
+  ANSITerminal.(print_string [black]
+                  "\n\n
+██╗    ██╗███████╗██╗      ██████╗ ██████╗ ███╗   ███╗███████╗
+██║    ██║██╔════╝██║     ██╔════╝██╔═══██╗████╗ ████║██╔════╝
+██║ █╗ ██║█████╗  ██║     ██║     ██║   ██║██╔████╔██║█████╗  
+██║███╗██║██╔══╝  ██║     ██║     ██║   ██║██║╚██╔╝██║██╔══╝  
+╚███╔███╔╝███████╗███████╗╚██████╗╚██████╔╝██║ ╚═╝ ██║███████╗
+ ╚══╝╚══╝ ╚══════╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝ 
+ \n");
   flush stdout;
   Unix.sleepf 1.5;
+  ANSITerminal.(print_string [red] "\n\n 
+                ████████╗ ██████╗ 
+                ╚══██╔══╝██╔═══██╗
+                   ██║   ██║   ██║
+                   ██║   ██║   ██║
+                   ██║   ╚██████╔╝
+                   ╚═╝    ╚═════╝ 
+                   \n");
+  flush stdout;
+  Unix.sleepf 1.5;
+
+  ANSITerminal.(print_string [black] "\n\n 
+
+███████╗ ██████╗██████╗  █████╗ ██████╗ ██████╗ ██╗     ███████╗
+██╔════╝██╔════╝██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║     ██╔════╝
+███████╗██║     ██████╔╝███████║██████╔╝██████╔╝██║     █████╗  
+╚════██║██║     ██╔══██╗██╔══██║██╔══██╗██╔══██╗██║     ██╔══╝  
+███████║╚██████╗██║  ██║██║  ██║██████╔╝████���█╔╝███  ██╗███████╗
+╚══==═╝ ╚════=╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═════╝ ╚══════╝╚══════╝
+
+
+  \n");
+  flush stdout;
+  Unix.sleepf 1.5;
+  ANSITerminal.erase Above;
+  ANSITerminal.set_cursor (fst cursor) (snd cursor);
+  Unix.sleepf 1.5;
+
+
   ANSITerminal.(print_string [blue] "The game currently has 2 Players
 For a turn to be valid, all words placed must be in the Scrabble dictionary
 and all tiles must be connected to the center (8,8) \n\n");
@@ -145,6 +183,8 @@ and all tiles must be connected to the center (8,8) \n\n");
         quit \n \n");
   Pervasives.flush stdout;
   Unix.sleepf 4.0;
+  ANSITerminal.erase Above;
+  ANSITerminal.set_cursor (fst cursor) (snd cursor);
   ANSITerminal.(print_string [red] "The board:");
   Pervasives.flush stdout;
   Unix.sleep 1;
