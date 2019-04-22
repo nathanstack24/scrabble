@@ -150,7 +150,7 @@ and all tiles must be connected to the center (8,8) \n\n");
   Unix.sleep 1;
   print_newline(); State.print_board_from_state (State.init_state 2); 
   print_newline();
-  execute_command (State.init_state 2); ()
+  ignore (execute_command (State.init_state 2))
 
 (* Execute the game engine. *)
 let () = main ()

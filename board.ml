@@ -1,4 +1,5 @@
 open Dictionary
+
 type tile = char
 
 type position = int*int
@@ -18,6 +19,17 @@ exception NotConnected
 exception BadWord
 exception OneLetter
 exception InvalidChar
+
+(**Positions with premium bonuses when words are played on them. *)
+type premiums = { dl: position list; tl: position list; 
+                  dw: position list; tw: position list; }
+
+let premiums = 
+  { dl = [(9,9);(7,7);(9,7);(7,9)];
+    tl = [(10,10)];
+    dw = [(11,11);(12,12);(13,13);(14,14)];
+    tw = [(15,15)]
+  }
 
 let get_x (square:board_square) = 
   fst square.pos
@@ -258,12 +270,22 @@ let is_valid_board (board:t) =
   that looks good for printing for the GUI.*)
 let bsquare_tostring bsquare = 
   match bsquare.occ with
-  | Some ti -> ("|" ^ (String.make 1 ti))
-  | None -> "|#"
+  | Some ti -> (String.make 1 ti)
+  | None -> "#"
+
+(*Gets the color the tile should print at.*)
+let get_bsquare_color bsquare = 
+  let pos = bsquare.pos in
+  if List.mem pos premiums.dl then [ANSITerminal.cyan]
+  else if List.mem pos premiums.tl  then [ANSITerminal.blue]
+  else if List.mem pos premiums.dw then [ANSITerminal.magenta]
+  else if List.mem pos premiums.tw then [ANSITerminal.red]
+  else [ANSITerminal.white]
 
 (* Prints the given list of board_squares IN ORDER to the console. *)
 let rec print_ordered_row = function
-  | h::t -> print_string (bsquare_tostring h); print_ordered_row t
+  | h::t -> print_string "|"; ANSITerminal.(print_string (get_bsquare_color h) 
+                                              (bsquare_tostring h)); print_ordered_row t
   | _ -> print_endline "|"
 
 (** [print_row_num num] prints the given row number to the console. Called 
