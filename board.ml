@@ -25,10 +25,16 @@ type premiums = { dl: position list; tl: position list;
                   dw: position list; tw: position list; }
 
 let premiums = 
-  { dl = [(9,9);(7,7);(9,7);(7,9)];
-    tl = [(10,10)];
-    dw = [(11,11);(12,12);(13,13);(14,14)];
-    tw = [(15,15)]
+  { dl = [(1,4);(1,12);(3,7);(3,9);(4,1);(4,8);(4,15);(7,3);
+          (7,7);(7,9);(7,13);(8,4); (8,12); (9,3);(9,7);(9,9);
+          (9,13);(12,1);(12,8);(12,15);(13,7);(13,9);(15,4);(15,12)];
+    tl = [(2,6);(2,10);(6,2);(6,6);(6,10);(6,14);(10,2);(10,6);
+          (10,10);(10,14);(14,6);(14,10);];
+    dw = [(2,2);(3,3);(4,4);(5,5);(8,8);
+          (2,14);(3,13);(4,12);(5,11);
+          (11,11);(12,12);(13,13);(14,14);
+          (11,5);(12,4);(13,3);(3,7);(14,2)];
+    tw = [(1,1);(1,15);(15,1);(15,15)]
   }
 
 let get_x (square:board_square) = 
@@ -271,7 +277,7 @@ let is_valid_board (board:t) =
 let bsquare_tostring bsquare = 
   match bsquare.occ with
   | Some ti -> (String.make 1 ti)
-  | None -> "#"
+  | None -> if bsquare.pos<>(8,8) then "#" else "*"
 
 (*Gets the color the tile should print at.*)
 let get_bsquare_color bsquare = 

@@ -2,6 +2,8 @@ open Command
 open Board
 open State
 
+
+
 (** [print_word_list word_lst] returns the string of  all the words in a 
     [word_lst], separated by commas*)
 let rec word_list_to_string word_lst = 
@@ -124,10 +126,10 @@ You made the following word(s): " ^ (word_list_to_string new_words) ^ "\n" ^
 let initial_commands = 0
 
 let main () =
-  (* ANSITerminal.save_cursor (); *)
-  let cursor = ANSITerminal.pos_cursor () in 
+  ANSITerminal.erase Above;
+  ANSITerminal.set_cursor 1 1;
   ANSITerminal.(print_string [black]
-                  "\n\n
+                  "
 ██╗    ██╗███████╗██╗      ██████╗ ██████╗ ███╗   ███╗███████╗
 ██║    ██║██╔════╝██║     ██╔════╝██╔═══██╗████╗ ████║██╔════╝
 ██║ █╗ ██║█████╗  ██║     ██║     ██║   ██║██╔████╔██║█████╗  
@@ -137,7 +139,7 @@ let main () =
  \n");
   flush stdout;
   Unix.sleepf 1.5;
-  ANSITerminal.(print_string [red] "\n\n 
+  ANSITerminal.(print_string [red] "
                 ████████╗ ██████╗ 
                 ╚══██╔══╝██╔═══██╗
                    ██║   ██║   ██║
@@ -148,21 +150,18 @@ let main () =
   flush stdout;
   Unix.sleepf 1.5;
 
-  ANSITerminal.(print_string [black] "\n\n 
-
+  ANSITerminal.(print_string [black] " 
 ███████╗ ██████╗██████╗  █████╗ ██████╗ ██████╗ ██╗     ███████╗
 ██╔════╝██╔════╝██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║     ██╔════╝
 ███████╗██║     ██████╔╝███████║██████╔╝██████╔╝██║     █████╗  
 ╚════██║██║     ██╔══██╗██╔══██║██╔══██╗██╔══██╗██║     ██╔══╝  
-███████║╚██████╗██║  ██║██║  ██║██████╔╝████���█╔╝███  ██╗███████╗
-╚══==═╝ ╚════=╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═════╝ ╚══════╝╚══════╝
-
-
+███████║╚██████╗█��║  ██��██║  ██║██████╔╝████ █╔=█  ██╗█████��█╗
+���══==═╝ ╚════=╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═════╝ ╚══════╝╚══════╝
   \n");
   flush stdout;
   Unix.sleepf 1.5;
   ANSITerminal.erase Above;
-  ANSITerminal.set_cursor (fst cursor) (snd cursor);
+  ANSITerminal.set_cursor 1 1;
   Unix.sleepf 1.5;
 
 
@@ -184,7 +183,7 @@ and all tiles must be connected to the center (8,8) \n\n");
   Pervasives.flush stdout;
   Unix.sleepf 4.0;
   ANSITerminal.erase Above;
-  ANSITerminal.set_cursor (fst cursor) (snd cursor);
+  ANSITerminal.set_cursor 1 1;
   ANSITerminal.(print_string [red] "The board:");
   Pervasives.flush stdout;
   Unix.sleep 1;
