@@ -318,7 +318,8 @@ let get_bsquare_color bsquare =
 let rec print_ordered_row = function
   | h::t -> print_string "|"; ANSITerminal.(print_string (get_bsquare_color h) 
                                               (bsquare_tostring h)); print_ordered_row t
-  | _ -> print_endline "|"
+  | _ -> let y_cursor = fst (ANSITerminal.pos_cursor ()) in 
+    print_endline "|" 
 
 (** [print_row_num num] prints the given row number to the console. Called 
   * before printing each row of the Scrabble board. *)

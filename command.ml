@@ -4,11 +4,9 @@ type command =
   | Quit
   | Place of tile*position
   | Remove of Board.position
-  | Inventory
   | Endturn
   | Score
   | Help
-  | Board
   | Perfect 
 
 exception Empty
@@ -29,10 +27,8 @@ let parse str : command =
       -> Place ((Board.make_tile (String.get c 0) ), 
                 (Board.make_pos (int_of_string row) (int_of_string col)))
     | "remove"::row::col::[] -> Remove (Board.make_pos (int_of_string row) (int_of_string col))
-    | "inventory"::t -> Inventory
-    | "endturn"::t -> Endturn
-    | "score"::t -> Score
-    | "help"::t -> Help
-    | "board"::t -> Board
-    | "perfect"::t -> Perfect
+    | "endturn"::[] -> Endturn
+    | "score"::[] -> Score
+    | "help"::[] -> Help
+    | "perfect"::[] -> Perfect
     | _ -> raise Malformed
