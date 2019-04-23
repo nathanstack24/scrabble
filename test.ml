@@ -131,6 +131,7 @@ let make_board_word_diff_tests
                            expected_output 
                            (get_board_word_diff old_board new_board)))
 
+
 let board_tests = [
   make_get_pos_tests "get pos 1, 1" square11emp pos11;
   make_get_pos_tests "get pos 1, 2" square12emp pos12;

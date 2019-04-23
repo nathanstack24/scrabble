@@ -71,8 +71,7 @@ let make_board_square (c:char option) (row:int) (col:int) : board_square =
 let set_square (tile:tile) (pos:position) (board:t): t = 
   set_square_helper [] tile pos board
 
-(** [get_neighbors square board] returns a list of the boards neighboring 
-    [square] in [board]*)
+
 let get_neighbors (p:position) (pos_list: position list) = 
   List.filter (fun p_neigh -> 
       (snd p = snd p_neigh && 
@@ -406,3 +405,13 @@ let get_board_word_diff old_board new_board =
   in loop new_words
 
 let print_tile (tile:tile) = print_char tile
+
+let get_row_num (board:t) :int = List.length (get_board_row 1 board)
+
+let get_col_num (board:t) :int = List.length (get_board_col 1 board)
+
+let get_board_positions board = List.map (fun bs -> get_pos bs) board
+
+let get_x_pos pos = fst pos
+
+let get_y_pos pos = snd pos

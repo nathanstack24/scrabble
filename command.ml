@@ -9,6 +9,7 @@ type command =
   | Score
   | Help
   | Board
+  | Perfect 
 
 exception Empty
 exception Malformed
@@ -33,4 +34,5 @@ let parse str : command =
     | "score"::t -> Score
     | "help"::t -> Help
     | "board"::t -> Board
+    | "perfect"::t -> Perfect
     | _ -> raise Malformed

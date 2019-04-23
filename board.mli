@@ -93,3 +93,23 @@ val print_tile : tile -> unit
 (** [get_board_word_diff old_board new_board] returns the list of words that is
     different between [old_board] and [new_board]*)
 val get_board_word_diff : t -> t -> string list
+
+(** [get_neighbors square board] returns a list of the boards neighboring 
+    [p] in [pos_list]*)
+val get_neighbors : position -> position list -> position list
+
+(** [get_row_num board] returns the number of rows in [board]*)
+val get_row_num : t -> int
+
+(** [get_col_num board] returns the number of rows in [board]*)
+val get_col_num : t -> int 
+
+(** [get_board_positions board] is the list of the coordinates for all the 
+    squares in the board*)
+val get_board_positions : t -> position list 
+
+(** [get_x_pos pos] returns the x coordinate of [pos]*)
+val get_x_pos : position -> int
+
+(** [get_y_pos pos] returns the y coordinate of [pos]*)
+val get_y_pos : position -> int

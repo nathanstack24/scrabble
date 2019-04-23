@@ -34,7 +34,7 @@ docs-private: build
 		-inv-merge-ml-mli -m A -hide-warnings $(MLIS) $(MLS)
 
 test:
-	$(OCAMLBUILD) -tag 'debug' $(TEST) && ./$(TEST) 
+	$(OCAMLBUILD) -tag 'debug' $(TEST) && OCAMLRUNPARAM="l=5555555555" ./$(TEST) 
 
 clean:
 	ocamlbuild -clean
