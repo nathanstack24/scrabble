@@ -24,6 +24,7 @@ exception EndGame
 exception Occupied
 exception NotInInv
 exception InvalidNumPlayers
+exception InvalidPlayerID
 
 (** [remove_from_tile_list tile lst] returns the tile list [lst] without the 
     first occurence of [tile]. Raises Not_found if tile is not in the tile 
@@ -237,6 +238,11 @@ let get_scores (state:t) =
     |[] -> []
     |h::t -> (h.player_id, h.score)::(loop t)
   in loop state.players
+
+let get_score (state:t) (player_id:int) = 
+  let player = List.find (fun player -> player.player_id=player_id) 
+      state.players in 
+  player.score
 
 let print_scores (state:t) = 
   let rec loop players = 

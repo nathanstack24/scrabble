@@ -5,7 +5,7 @@ type tile = char
 type position = int*int
 
 type board_square = {
-  pos : position; 
+  pos : position;
   occ : tile option
 }
 
@@ -298,8 +298,8 @@ let is_valid_board (board:t) =
      else raise NotConnected)
   else raise BadWord
 
-(*[bsquare_tostring bsquare] Returns a string representation of a board_square 
-  that looks good for printing for the GUI.*)
+(** [bsquare_tostring bsquare] Returns a string representation of a board_square 
+    that looks good for printing for the GUI.*)
 let bsquare_tostring bsquare = 
   match bsquare.occ with
   | Some ti -> (String.make 1 ti)
@@ -308,11 +308,11 @@ let bsquare_tostring bsquare =
 (*Gets the color the tile should print at.*)
 let get_bsquare_color bsquare = 
   let pos = bsquare.pos in
-  if List.mem pos premiums.dl then [ANSITerminal.cyan]
-  else if List.mem pos premiums.tl  then [ANSITerminal.blue]
-  else if List.mem pos premiums.dw then [ANSITerminal.magenta]
-  else if List.mem pos premiums.tw then [ANSITerminal.red]
-  else [ANSITerminal.white]
+  if List.mem pos premiums.dl then [ANSITerminal.on_cyan;ANSITerminal.black;Bold]
+  else if List.mem pos premiums.tl  then [ANSITerminal.on_blue;ANSITerminal.black;Bold]
+  else if List.mem pos premiums.dw then [ANSITerminal.on_magenta;ANSITerminal.black;Bold]
+  else if List.mem pos premiums.tw then [ANSITerminal.on_red;ANSITerminal.black;Bold]
+  else [ANSITerminal.white;ANSITerminal.black]
 
 (* Prints the given list of board_squares IN ORDER to the console. *)
 let rec print_ordered_row = function
@@ -354,6 +354,7 @@ let rec make_x_coord_string col_num =
 (*Main functionality is in helper. This simply sets the row counter to 1 and 
   lets the helper do the main work. *)
 let print_board board : unit = 
+  ANSITerminal.(print_string [red] "The board:\n");
   let n = (List.length (get_board_row 1 board)) in 
   print_board_helper board n;
   print_string ("  " ^ (make_x_coord_string n))
