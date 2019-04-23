@@ -438,8 +438,21 @@ let rec chars_on_board_helper (acc:char list) = function
     |Some c -> chars_on_board_helper (c::acc) t
     |None -> chars_on_board_helper acc t
 
+(**Take a board [board] and return the list of chars on that board *)
 let chars_on_board (board:t) :(char list) = 
   chars_on_board_helper [] board
+
+(**Will filter return [false] if string [s] cannot be made 
+   up of chars in [clist]*)
+(**NEEDS WORK AT THE MOMENT *)
+let filter_func clist s = 
+  let wordclist = failwith "unimplemented" in wordclist
+
+(**Returns a new dictionary of all words that could be made with the current
+   [inv] and [board] *)
+let possible_words_dict inv board = 
+  let clist = List.append inv (chars_on_board board) in
+  Dict.filter (filter_func clist) dict
 
 let print_tile (tile:tile) = print_char tile
 
