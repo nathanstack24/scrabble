@@ -45,8 +45,10 @@ val get_occ : board_square -> tile option
 (** [set_occ] returns the tile option at [square]*)
 val set_occ : board_square -> tile -> board_square
 
-(** Takes in a board [t] and prints it to console *)
-val print_board : t -> unit
+(** [print_board b pos] prints board [b] to the console, and blinks 
+  * the board square with position [pos] to indicate the current location of the
+  * cursor.  *)
+val print_board : t -> position -> unit
 
 (** [set_square t p b] adds tile [t] to position [p] of board [b] if that 
     position is not occupied, and returns a new board. If [p] is occupied, 

@@ -55,7 +55,7 @@ let set_occ (square:board_square) (tile:tile) =
 let rec get_square (pos:position) (board:t) = 
   match board with 
   | [] -> raise (InvalidPos pos)
-  | h::t -> if (h.pos = pos) then h else get_square pos t
+  | h::t -> if (h.pos = pos) then h else get_square pos {board with b_squares=t}
 
 let rec set_square_helper  (acc:t) (tile:tile) (pos:position) (board:t)  = 
   match board with 
@@ -381,12 +381,20 @@ let get_bsquare_color bsquare =
   else if List.mem pos premiums.tw then [ANSITerminal.on_red;ANSITerminal.black;Bold]
   else [ANSITerminal.white;ANSITerminal.black]
 
+(** [is_cursor_pos] returns a list of ANSITerminal.style styles used to print
+  * on the terminal.  *)
+let is_cursor_pos (b:board_square) (cursor:position) : ANSITerminal.style list = 
+  if b.pos=cursor then [ANSITerminal.Blink; ANSITerminal.on_black] else []
+
+
 (* Prints the given list of board_squares IN ORDER to the console. *)
-let rec print_ordered_row = function
-  | h::t -> print_string "|"; ANSITerminal.(print_string (get_bsquare_color h) 
-                                              (bsquare_tostring h)); print_ordered_row t
-  | _ -> let y_cursor = fst (ANSITerminal.pos_cursor ()) in 
-    print_endline "|" 
+let rec print_ordered_row (lst:board_square list) (cursor:position) = 
+  match lst with 
+  | h::t -> print_string "|"; 
+    ANSITerminal.print_string ((get_bsquare_color h)@(is_cursor_pos h cursor))
+      (bsquare_tostring h); 
+    print_ordered_row t cursor
+  | _ -> print_endline "|" 
 
 (** [print_row_num num] prints the given row number to the console. Called 
   * before printing each row of the Scrabble board. *)
@@ -405,13 +413,18 @@ let rec print_col_num (num:int) (stop:int) =
 (** [print_board_helper board rowcounter] prints each of the rows on the Scrabble
   * board [board] with corresponding row identifier [row_counter]. When [rowcounter]
   * reaches zero, all rows of the Scrabble board have been printed. *)
-let rec print_board_helper board rowcounter: unit = 
+let rec print_board_helper (board:t) (rowcounter:int) (cursor: position) = 
   if rowcounter = 0 then ()
   else (
     print_row_num rowcounter;
+<<<<<<< Updated upstream
     print_ordered_row (List.sort comp_squares_x (get_board_row rowcounter board)); 
     if rowcounter = 5 then print_string "" else ();
     print_board_helper board (rowcounter - 1); ())
+=======
+    print_ordered_row (List.sort comp_squares_x (get_board_row rowcounter board)) cursor; 
+    print_board_helper board (rowcounter - 1) cursor; ())
+>>>>>>> Stashed changes
 
 (** [make_x_coord_string col_num] returns the string of integers to be printed
     at the bottom of a board with [col_num] columns*)
@@ -423,10 +436,15 @@ let rec make_x_coord_string col_num =
 
 (*Main functionality is in helper. This simply sets the row counter to 1 and 
   lets the helper do the main work. *)
-let print_board board : unit = 
+let print_board (board:t) (cursor:position) : unit = 
   ANSITerminal.(print_string [red] "The board:\n");
+<<<<<<< Updated upstream
   let n = (List.length (get_board_col 1 board)) in 
   print_board_helper board n;
+=======
+  let n = (List.length (get_board_row 1 board)) in 
+  print_board_helper board n cursor;
+>>>>>>> Stashed changes
   print_string ("  " ^ (make_x_coord_string n))
 
 

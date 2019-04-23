@@ -16,6 +16,7 @@ type t = {
   board : Board.t;
   curr_turn: curr_turn;
   tile_bag: tile list;
+  cursor: position
 }
 
 exception MisplacedTile
@@ -82,6 +83,7 @@ let init_state (num_players: int) : t =
       board = new_board 15;
       curr_turn = new_curr_turn;
       tile_bag = bag;
+      cursor = make_pos 8 8;
     }
 
 (** [is_in_inv t curr_turn] returns whether tile is in the current player's 
@@ -228,7 +230,8 @@ let end_turn state =
     {players = new_players; 
      board = merged_board;
      curr_turn = {curr_player = next; new_squares = []};
-     tile_bag = new_bag} 
+     tile_bag = new_bag;
+     cursor = make_pos 8 8;} 
   else 
     {state with 
      curr_turn = {curr_player = get_player_from_id id state.players;
