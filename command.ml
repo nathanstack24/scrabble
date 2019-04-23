@@ -7,6 +7,11 @@ type command =
   | Endturn
   | Score
   | Help
+<<<<<<< Updated upstream
+=======
+  | Board
+  | Integer of int
+>>>>>>> Stashed changes
   | Perfect 
 
 exception Empty
@@ -27,8 +32,18 @@ let parse str : command =
       -> Place ((Board.make_tile (String.get c 0) ), 
                 (Board.make_pos (int_of_string row) (int_of_string col)))
     | "remove"::row::col::[] -> Remove (Board.make_pos (int_of_string row) (int_of_string col))
+<<<<<<< Updated upstream
     | "endturn"::[] -> Endturn
     | "score"::[] -> Score
     | "help"::[] -> Help
     | "perfect"::[] -> Perfect
+=======
+    | "inventory"::t -> Inventory
+    | "endturn"::t -> Endturn
+    | "score"::t -> Score
+    | "help"::t -> Help
+    | "board"::t -> Board
+    | "perfect"::t -> Perfect
+    | h::t -> (try (let i = (int_of_string h) in (Integer i)) with | _ -> raise Malformed)
+>>>>>>> Stashed changes
     | _ -> raise Malformed

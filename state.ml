@@ -26,6 +26,8 @@ exception NotInInv
 exception InvalidNumPlayers
 exception InvalidPlayerID
 
+let eng_dict = create_dictionary
+
 (** [remove_from_tile_list tile lst] returns the tile list [lst] without the 
     first occurence of [tile]. Raises Not_found if tile is not in the tile 
     list *)
@@ -283,6 +285,12 @@ let get_state_word_diff old_state new_state =
 let get_state_score_diff old_state new_state = 
   get_board_score old_state.board new_state.board
 
+let rec word_list_to_string word_lst = 
+  match word_lst with 
+  |[] -> ""
+  |h::[] -> h
+  |h::t -> h ^ ", " ^ (word_list_to_string t)
+
 (** [try_each_tile pos state] returns all the states that are 
     valid from trying each tile from [t_lst] at [pos]*)
 let rec try_each_tile (pos:Board.position) (state:t) : t list=
@@ -297,45 +305,74 @@ let rec try_each_tile (pos:Board.position) (state:t) : t list=
       |InvalidPos pos -> raise (InvalidPos pos)
   in loop [] inv pos state
 
+let is_bad_start bad_start string dict=
+  let string_len = String.length string in 
+  Dict.fold (fun elt prev-> 
+      if string_len > String.length elt then prev 
+      else if List.mem string bad_start then prev
+      else if let word_start = String.sub elt 0 string_len in
+        word_start = String.uppercase_ascii string then false 
+      else prev) dict true 
+
+let rec good_play string_list bad_start dict = 
+  match string_list with 
+  |string::t -> if is_bad_start bad_start string dict then false else 
+      good_play t bad_start dict
+  |[] -> true
+
+let rec update_bad_start str_lst bad_start dict= 
+  match str_lst with
+  |h::t -> if List.mem h bad_start then update_bad_start t bad_start dict
+    else if is_bad_start bad_start h dict 
+    then (print_endline ("updated with " ^ h);(update_bad_start t (h::bad_start) dict) )
+    else update_bad_start t bad_start dict
+  |[] -> bad_start
+
 (** [try_letter_col start_row col row_num] returns the list of states that are 
     possible from placing tiles in column [col] starting from row [start_row]*)
-let try_letter_col (col:int) (start_row:int) (row_num:int) (st : t) = 
-  let rec loop (total_acc: t list) (local_acc: t list) (col:int) (start_row:int) (st_lst:t list) = 
+let try_letter_col (col:int) (start_row:int) (row_num:int) (st : t) (bad_start: string list)= 
+  let rec loop (total_acc: t list) (local_acc: t list) (col:int) (start_row:int) (st_lst:t list) (bad_start: string list)= 
     (*print_string ("entered tlc " ^ (string_of_int col) ^ " " ^ (string_of_int start_row)); print_newline();*)
     match st_lst with 
     |state::st_lst2 -> 
-      if start_row > row_num then (*(print_endline "startrow > rownum";*) total_acc else 
+      if start_row = 0 then (*(print_endline "startrow > rownum";*) (total_acc, bad_start) else 
         let pos = make_pos col start_row in (*print_endline "startrow < rownum";*)
         let inv = state.curr_turn.curr_player.inv in
-        if inv = [] then (*(print_endline "empty inv";*) total_acc  else
+        if inv = [] then (*(print_endline "empty inv";*) (total_acc, bad_start)  else
           (try 
              (*print_string ("made it here try_letter col " ^ (string_of_int col) ^ " " ^ (string_of_int start_row)); print_newline();*)
-             let new_lst1 = (try_each_tile pos state) @ total_acc in(* list of boards with new tile placed at pos*)
-             let new_lst2 = (try_each_tile pos state) @ local_acc in (*print_endline "stuck here";*)
-             loop new_lst1 new_lst2 col (start_row) st_lst2
+             let f = fun st -> if List.length st.curr_turn.new_squares > 1 
+               then check_words st.board else true in
+             let new_lst1 = (List.filter f (try_each_tile pos state)) @ total_acc in(* list of states with new tile placed at pos*)
+             let new_lst2 = (try_each_tile pos state)  @ local_acc in
+             let bad_start = [] (*update_bad_start (get_board_word_diff st.board (merge_boards state.curr_turn.new_squares state.board)) bad_start eng_dict*) in 
+             loop new_lst1 new_lst2 col (start_row) st_lst2 bad_start
            with 
-           |Occupied -> (*print_endline "stuck here 2" ;*)loop total_acc [] col (start_row+1) local_acc)
-    |[] -> (*print_endline "last option" ;*) loop total_acc [] col (start_row+1) local_acc
-  in loop [] [] col start_row [st]
+           |Occupied -> (*print_endline "stuck here 2" ;*)loop total_acc [] col (start_row-1) local_acc bad_start) 
+    |[] -> (*print_endline "last option" ;*) loop total_acc [] col (start_row-1) local_acc bad_start
+  in loop [] [] col start_row [st] bad_start
 
-let  try_letter_row (start_col:int) (row:int) (col_num:int) (st : t) = 
-  let rec loop (total_acc: t list) (local_acc: t list) (start_col:int) (row:int) (st_lst:t list) = 
+let  try_letter_row (start_col:int) (row:int) (col_num:int) (st : t) (bad_start: string list)= 
+  let rec loop (total_acc: t list) (local_acc: t list) (start_col:int) (row:int) (st_lst:t list) (bad_start: string list)= 
     (*print_string ("entered tlr " ^ (string_of_int start_col) ^ " " ^ (string_of_int row)); print_newline();*)
     match st_lst with
     |state::st_lst2 -> 
-      if start_col > col_num then total_acc else 
+      if start_col > col_num then (total_acc, bad_start) else 
         let pos = make_pos start_col row in
         let inv = state.curr_turn.curr_player.inv in
-        if inv = [] then total_acc else
+        if inv = [] then (total_acc, bad_start) else
           (try 
              (*print_endline "made it here try_letter row";*)
-             let new_lst1 = (try_each_tile pos state) @ total_acc in(* list of states with new tile placed at pos*)
+             let f = fun st -> if List.length st.curr_turn.new_squares > 1 
+               then check_words st.board else true in
+             let new_lst1 = (List.filter f (try_each_tile pos state)) @ total_acc in(* list of states with new tile placed at pos*)
              let new_lst2 = (try_each_tile pos state) @ local_acc in
-             loop new_lst1 new_lst2 (start_col) row st_lst2
+             let bad_start = [](*update_bad_start (get_board_word_diff st.board (merge_boards state.curr_turn.new_squares state.board)) bad_start eng_dict*) in 
+             loop new_lst1 new_lst2 (start_col) row st_lst2 bad_start
            with 
-           |Occupied -> loop total_acc [] (start_col+1) row local_acc)
-    |[] -> loop total_acc [] (start_col+1) row local_acc
-  in loop [] [] start_col row [st]
+           |Occupied -> loop total_acc [] (start_col+1) row local_acc bad_start) 
+    |[] -> loop total_acc [] (start_col+1) row local_acc bad_start
+  in loop [] [] start_col row [st] bad_start
 
 (** [all_word_states state] returns a list of all of the possible states given 
     a start state*)
@@ -343,27 +380,33 @@ let all_word_states (state:t) =
   let pos_list = get_board_positions state.board in 
   let col_num = get_col_num state.board in 
   let row_num = get_row_num state.board in 
-  let rec loop pos_list acc= 
+  let rec loop pos_list acc bad_start= 
     match pos_list with 
     |[] -> acc
     |h::t -> let x = get_x_pos h in 
       let y = get_y_pos h in 
       print_string ("x: " ^ (string_of_int x) ^ ", y:" ^ (string_of_int y)); print_newline();
-      let row_words = try_letter_row x y col_num state in 
+      let row_data = try_letter_row x y col_num state bad_start in 
+      let row_words = fst row_data in 
+      let bad_start = (snd row_data) @ bad_start in 
       print_endline ("//////////////////////////////" ^ (string_of_int x) ^ ", y:" ^ (string_of_int y));
-      let col_words = try_letter_col x y row_num state in 
-      loop t ((row_words @ col_words) @ acc)
-  in loop pos_list [state]
+      let col_data = try_letter_col x y row_num state bad_start in 
+      let col_words = fst col_data in
+      let bad_start = (snd col_data @ bad_start) in
+      loop t ((row_words @ col_words) @ acc) bad_start
+  in loop pos_list [state] []
 
-let perfect_turn state = 
-  let all_connected = List.filter (fun s -> are_connected_to_center (make_pos 8 8) s.board) (all_word_states state) in print_endline ("made it here "^ string_of_int (List.length all_connected))  ;
-  let all_words = List.filter (fun s -> check_words state.board) all_connected in print_endline "made it here2";
+
+let perfect_turn init_state = 
+  let all_connected = List.filter (fun s -> are_connected_to_center (make_pos 8 8) s.board) (all_word_states init_state) in print_endline ("made it here "^ string_of_int (List.length all_connected))  ;
+  (*let all_words = List.filter (fun s -> check_words s.board) all_connected in print_endline "made it here2";*)
   let rec loop max_score_state state_lst init_state max_score=
     match state_lst with 
     |[] -> max_score_state 
     |state::t -> 
       let curr_score = get_new_score init_state.board state.board in 
       if curr_score >  max_score 
-      then loop state t init_state curr_score
-      else loop max_score_state state_lst init_state max_score
-  in loop state all_words state 0
+      then (print_int curr_score; loop state t init_state curr_score)
+      else loop max_score_state t init_state max_score
+  in loop init_state all_connected init_state 0
+

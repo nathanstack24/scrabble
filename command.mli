@@ -6,6 +6,8 @@ type command =
   | Endturn
   | Score
   | Help
+  | Board
+  | Integer of int
   | Perfect
 
 (** The exception raised when a command is malformed*)

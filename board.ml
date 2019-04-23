@@ -191,6 +191,25 @@ let find_word_row (first_letter_pos:position) (board:t)=
     |[] -> word 
   in loop sorted_row col_ind ""
 
+(** [find_word_mul_row pos board] finds the horizontal word starting at [pos] of 
+    [board] and their associated multiplier*)
+let find_word_mul_row (first_letter_pos:position) (board:t)= 
+  let row_ind = snd first_letter_pos in
+  let sorted_row = List.sort comp_squares_x (get_board_row row_ind board) in 
+  let col_ind = fst first_letter_pos in
+  let rec loop lst c acc = 
+    match lst with 
+    |{pos = (x, _); occ = _}::t when x < c -> loop t c acc
+    |{pos = p; occ = Some tile}::t -> 
+      if List.mem p premiums.dl then loop t c ((tile, "dl")::acc)
+      else if List.mem p premiums.dw then loop t c ((tile, "dw")::acc)
+      else if List.mem p premiums.tl then loop t c ((tile, "tl")::acc)
+      else if List.mem p premiums.tw then  loop t c ((tile, "tw")::acc)
+      else loop t c ((tile, "")::acc)
+    |{pos = (x, _); occ = None}::t -> acc
+    |[] -> acc 
+  in loop sorted_row col_ind []
+
 (** [find_word_col pos board] finds the vertical word starting at [pos] of 
     [board]*)
 let find_word_column (first_letter_pos:position) (board:t)= 
@@ -204,6 +223,25 @@ let find_word_column (first_letter_pos:position) (board:t)=
     |{pos = (_, x); occ = None}::t -> word
     |[] -> word 
   in loop sorted_col row_ind ""
+
+(** [find_word_mul_col pos board] finds the vertical word starting at [pos] of 
+    [board]*)
+let find_word_mul_column (first_letter_pos:position) (board:t)= 
+  let col_ind = fst first_letter_pos in
+  let sorted_col = List.sort comp_squares_y (get_board_col col_ind board) in 
+  let row_ind = snd first_letter_pos in
+  let rec loop lst r acc = 
+    match lst with 
+    |{pos = (_, x); occ = _}::t when x > r -> loop t r acc
+    |{pos = p; occ = Some tile}::t ->    
+      if List.mem p premiums.dl then loop t r ((tile, "dl")::acc)
+      else if List.mem p premiums.dw then loop t r ((tile, "dw")::acc)
+      else if List.mem p premiums.tl then loop t r ((tile, "tl")::acc)
+      else if List.mem p premiums.tw then  loop t r ((tile, "tw")::acc)
+      else loop t r ((tile, "")::acc)
+    |{pos = (_, x); occ = None}::t -> acc
+    |[] -> acc 
+  in loop sorted_col row_ind []
 
 (** [print_pos] prints the position [pos] to the terminal*)
 let print_pos (pos:position) = 
@@ -236,6 +274,21 @@ let word_list_from_board_col (board:t) =
       else loop t board
   in loop first_letters board
 
+(** [word_mul_from_board_col board] returns a list of all the vertical words on
+    [board] with their associated word_multiplier*)
+let word_mul_list_from_board_col (board:t) =
+  let first_letters = remove_dups (first_letter_squares_col board) [] in
+  let rec loop pos_list board = 
+    match pos_list with
+    |[] -> []
+    |h::t ->
+      let col_word_mul = find_word_mul_column h board in 
+      let col_word_len = List.length col_word_mul in 
+      if col_word_len > 1 then 
+        col_word_mul::loop t board
+      else loop t board
+  in loop first_letters board
+
 (** [word_list_from_board_row board] returns a list of all the horizontal words 
     on [board]*)
 let word_list_from_board_row (board:t) = 
@@ -251,6 +304,21 @@ let word_list_from_board_row (board:t) =
       else loop t board
   in loop first_letters board
 
+(** [word_mul_from_board_row board] returns a list of all the horizontal words 
+    on [board] with their associated multiplier*)
+let word_mul_list_from_board_row (board:t) = 
+  let first_letters = remove_dups (first_letter_squares_row board) [] in
+  let rec loop pos_list board = 
+    match pos_list with
+    |[] -> []
+    |h::t ->
+      let row_word_mul = find_word_mul_row h board in 
+      let row_word_len = List.length row_word_mul in 
+      if row_word_len > 1 then 
+        row_word_mul::(loop t board)
+      else loop t board
+  in loop first_letters board
+
 (** [are_words_valid word_list] returns whether all words in word_list are in
     the English dictionary *)
 let rec are_words_valid word_list dict = 
@@ -258,7 +326,6 @@ let rec are_words_valid word_list dict =
   |h::t -> if (Dict.mem (String.uppercase_ascii h) dict) = false then false 
     else are_words_valid t dict
   |[] -> true
-
 
 let check_word_list_from_board_col (board:t) = 
   let first_letters = first_letter_squares_col board in
@@ -343,6 +410,7 @@ let rec print_board_helper board rowcounter: unit =
   else (
     print_row_num rowcounter;
     print_ordered_row (List.sort comp_squares_x (get_board_row rowcounter board)); 
+    if rowcounter = 5 then print_string "" else ();
     print_board_helper board (rowcounter - 1); ())
 
 (** [make_x_coord_string col_num] returns the string of integers to be printed
@@ -350,13 +418,14 @@ let rec print_board_helper board rowcounter: unit =
 let rec make_x_coord_string col_num = 
   let col_str = (string_of_int col_num) in 
   let last_dig = String.get col_str ((String.length col_str) - 1) in 
-  if col_num = 0 then "" else  make_x_coord_string (col_num-1)^ " " ^ (String.make 1 last_dig)
+  if col_num = 0 then "" else  make_x_coord_string (col_num-1)^ " " ^ 
+                               (String.make 1 last_dig)
 
 (*Main functionality is in helper. This simply sets the row counter to 1 and 
   lets the helper do the main work. *)
 let print_board board : unit = 
   ANSITerminal.(print_string [red] "The board:\n");
-  let n = (List.length (get_board_row 1 board)) in 
+  let n = (List.length (get_board_col 1 board)) in 
   print_board_helper board n;
   print_string ("  " ^ (make_x_coord_string n))
 
@@ -398,26 +467,31 @@ let make_tile (c:char) : tile =
   let range = 65 -- 90 in 
   if (List.mem code range) then c else raise InvalidChar
 
-let rec get_word_score (word:string) (n:int) : int = 
+let rec get_word_score (word_mul: (tile*string) list ) (n:int) : int = 
   if n = 0 then 0 else 
-    let curr_char = String.get word (n-1) in
+    let curr_char = fst (List.nth word_mul (n-1)) in
     let char_score = Values.find curr_char tile_values in 
-    char_score + get_word_score word (n-1)
+    let mul = snd (List.nth word_mul (n-1)) in 
+    if mul = "dl" then  (2*char_score) + get_word_score word_mul (n-1)
+    else if mul = "dw" then  2*(char_score + get_word_score word_mul (n-1))
+    else if mul = "tl" then (2*char_score) + get_word_score word_mul (n-1)
+    else if mul = "tw" then 3*(char_score + get_word_score word_mul (n-1))
+    else char_score + get_word_score word_mul (n-1)
 
 (** get_word_difference returns the words that are in list2 that are not in 
     list1*)
-let get_word_difference wordlist1 wordlist2 = 
+let rec get_word_difference wordlist1 wordlist2 = 
   List.filter (fun w2-> List.mem w2 wordlist1 = false) wordlist2
 
 let get_board_score (old_board:t) (new_board:t)= 
-  let old_words = (word_list_from_board_row old_board) @ 
-                  (word_list_from_board_col old_board) in 
-  let all_words = (word_list_from_board_row new_board) @ 
-                  (word_list_from_board_col new_board) in 
+  let old_words = (word_mul_list_from_board_row old_board) @ 
+                  (word_mul_list_from_board_col old_board) in 
+  let all_words = (word_mul_list_from_board_row new_board) @ 
+                  (word_mul_list_from_board_col new_board) in 
   let new_words = get_word_difference old_words all_words in
   let rec loop words = 
     match words with 
-    |h::t -> (get_word_score h (String.length h)) + loop t
+    |h::t -> (get_word_score h (List.length h)) + loop t
     |[] -> 0
   in loop new_words
 
