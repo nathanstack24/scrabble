@@ -25,10 +25,10 @@ let parse str : command =
   if List.length cmd = 0 then raise Empty else 
     match cmd with 
     | "quit"::t -> Quit
-    | "place"::c::row::col::t 
+    | "place"::c::row::col::[] 
       -> Place ((Board.make_tile (String.get c 0) ), 
                 (Board.make_pos (int_of_string row) (int_of_string col)))
-    | "remove"::row::col::t -> Remove (Board.make_pos (int_of_string row) (int_of_string col))
+    | "remove"::row::col::[] -> Remove (Board.make_pos (int_of_string row) (int_of_string col))
     | "inventory"::t -> Inventory
     | "endturn"::t -> Endturn
     | "score"::t -> Score

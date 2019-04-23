@@ -12,6 +12,10 @@ let rec word_list_to_string word_lst =
   |h::[] -> h
   |h::t -> h ^ ", " ^ (word_list_to_string t)
 
+let erase_above = fun () ->
+  ANSITerminal.erase Above;
+  ANSITerminal.set_cursor 1 2
+
 let rec get_next_command (player_id:int) (st:State.t) = 
   print_endline ("Your turn, Player " ^ string_of_int (player_id)) ;
   let score = List.assoc player_id (State.get_scores st) in
@@ -22,47 +26,91 @@ let rec get_next_command (player_id:int) (st:State.t) =
   | exception End_of_file -> exit 1
   | text -> 
     try Command.parse text with
+    | Board.InvalidChar -> print_endline ("Bad command. You can only place" ^ 
+                                          "letters that are currently in your inventory. Try again.");
+      flush stdout;
+      Unix.sleep 1;
+      erase_above ();
+      State.print_board_from_state st; 
+      print_newline(); get_next_command player_id st
+
     | Command.Malformed -> 
-      print_endline "Bad command. Try again"; get_next_command player_id st
+      print_endline "Bad command. Enter 'help' for a list of valid commands";
+      flush stdout;
+      Unix.sleep 1;
+      erase_above ();
+      State.print_board_from_state st; 
+      print_newline(); get_next_command player_id st
     | Command.Empty -> get_next_command player_id st 
     | Failure x -> 
       print_endline "Bad command. Enter 'help' for a list of valid commands"; 
+      flush stdout;
+      Unix.sleep 1;
+      erase_above ();
+      State.print_board_from_state st; 
+      print_newline();
       get_next_command player_id st
+
 
 let rec execute_command (st:State.t) : State.t =
   let player_id = get_curr_player_id st in 
   match get_next_command player_id st with 
   | (Command.Quit) -> exit 0
   | (Command.Place (c,pos)) -> (try (let new_st = State.place_tile c pos st in
-                                     print_newline(); 
+                                     erase_above ();
                                      State.print_board_from_state new_st; 
                                      print_newline(); execute_command new_st)
                                 with 
                                 | State.MisplacedTile -> 
                                   print_newline();
-                                  print_endline "The tile was misplaced, try again"; 
+                                  ANSITerminal.print_string [ANSITerminal.red] 
+                                    "The tile was misplaced, try again";
+                                  flush stdout;
+                                  Unix.sleep 1;
+                                  erase_above ();
                                   print_newline(); State.print_board_from_state st; 
                                   print_newline(); execute_command st
                                 | State.NotInInv ->
                                   ANSITerminal.print_string [ANSITerminal.red] 
                                     "That letter is not in your inventory. Try again.";
                                   print_newline();
-                                  execute_command st;
+                                  flush stdout;
+                                  Unix.sleep 1;
+                                  erase_above ();
+                                  State.print_board_from_state st; 
+                                  print_newline(); execute_command st;
+                                | Board.InvalidPos pos -> 
+                                  ANSITerminal.print_string [ANSITerminal.red]
+                                    ("(" ^ (string_of_int (get_x_pos pos)) ^ ", " ^
+                                     (string_of_int (get_y_pos pos)) ^ ") is not"^
+                                     "a valid position. Try again.");
+                                  print_newline();
+                                  flush stdout;
+                                  Unix.sleep 1;
+                                  erase_above ();
+                                  State.print_board_from_state st; 
+                                  print_newline(); execute_command st;
+
                                 | State.Occupied -> 
                                   ANSITerminal.print_string [ANSITerminal.red] 
                                     "That board square is already occupied. Try again.";
-                                  print_newline();
-                                  execute_command st;)
+                                  flush stdout;
+                                  Unix.sleep 1;
+                                  erase_above ();
+                                  State.print_board_from_state st; 
+                                  print_newline(); execute_command st;)
 
 
   | (Command.Remove mybsquare) -> 
     (try let new_st = (State.remove_tile mybsquare st) in 
-       print_newline(); State.print_board_from_state new_st; print_newline();
+       erase_above(); State.print_board_from_state new_st; print_newline();
        execute_command new_st
      with 
      |Not_found -> print_newline(); 
        print_endline "No tile to be removed at that position"; 
-       print_newline(); State.print_board_from_state st; print_newline(); 
+       flush stdout;
+       Unix.sleep 1;
+       erase_above(); State.print_board_from_state st; print_newline(); 
        execute_command st) 
 
   | (Command.Inventory) -> print_string ("Your letters are: " ); 
@@ -71,32 +119,46 @@ let rec execute_command (st:State.t) : State.t =
     (try let new_st = State.end_turn st in 
        let new_words = State.get_state_word_diff st new_st in
        let points = State.get_state_score_diff st new_st in
-       print_newline(); State.print_board_from_state new_st; 
-       print_newline(); ANSITerminal.(print_string [green] 
-                                        ("Great turn!
+       erase_above();
+       State.print_board_from_state new_st; 
+       print_newline(); 
+       let player = get_curr_player_id st in 
+       let new_score = get_score new_st player in 
+       ANSITerminal.(print_string [green] 
+                       ("Great turn!
 You made the following word(s): " ^ (word_list_to_string new_words) ^ "\n" ^
-                                         "You earned " ^ (string_of_int points) ^ " points" ));  
-       print_newline(); execute_command (new_st)
+                        "You earned " ^ (string_of_int points) ^ " points \n"^
+                        "Player "^ (string_of_int player) ^ 
+                        "'s score is now " ^ 
+                        (string_of_int new_score));  
+
+                     print_newline(); execute_command (new_st))
      with 
-     |Board.BadWord -> print_newline(); State.print_board_from_state st; 
+     |Board.BadWord -> State.print_board_from_state st; 
        print_newline(); ANSITerminal.(print_string [red]
                                         ("Some words on the board are not "^
                                          "valid. Try again. \n"));
-       execute_command st
+       erase_above ();
+       State.print_board_from_state st; 
+       print_newline(); execute_command st
      |Board.NotConnected -> 
-       print_newline(); State.print_board_from_state st; 
+       State.print_board_from_state st; 
        print_newline(); 
        ANSITerminal.(print_string [red]
                        ("Some tiles on the board are not connected to the " ^ 
                         "center tile. Try again \n")); 
-       execute_command st
+       erase_above ();
+       State.print_board_from_state st; 
+       print_newline(); execute_command st
      |Board.OneLetter ->
-       print_newline(); State.print_board_from_state st; 
+       State.print_board_from_state st; 
        print_newline(); 
        ANSITerminal.(print_string [red]
                        ("Words placed must be at least 2 letters long. " ^ 
                         "Try again \n")); 
-       execute_command st
+       erase_above ();
+       State.print_board_from_state st; 
+       print_newline(); execute_command st
 
      | State.EndGame -> print_newline(); 
        ANSITerminal.(print_string [green]
@@ -118,9 +180,12 @@ You made the following word(s): " ^ (word_list_to_string new_words) ^ "\n" ^
       not end until you play a valid word.
       help to print this message again
       quit to quit\n \n"); 
+    erase_above ();
+    State.print_board_from_state st; 
     print_newline(); execute_command st
 
-  |Command.Board -> print_newline(); State.print_board_from_state st;
+  |Command.Board -> erase_above ();
+    State.print_board_from_state st; 
     print_newline(); execute_command st
 
   |Command.Perfect -> execute_command (State.perfect_turn st)
@@ -128,51 +193,51 @@ You made the following word(s): " ^ (word_list_to_string new_words) ^ "\n" ^
 let initial_commands = 0
 
 let main () =
-  ANSITerminal.erase Above;
-  ANSITerminal.set_cursor 1 1;
-  ANSITerminal.(print_string [black]
+  (* ANSITerminal.erase Above;
+     ANSITerminal.set_cursor 1 1;
+     ANSITerminal.(print_string [black]
                   "
-██╗    ██╗███████╗██╗      ██████╗ ██████╗ ███╗   ███╗███████╗
-██║    ██║██╔════╝██║     ██╔════╝██╔═══██╗████╗ ████║██╔════╝
-██║ █╗ ██║█████╗  ██║     ██║     ██║   ██║██╔████╔██║█████╗  
-██║███╗██║██╔══╝  ██║     ██║     ██║   ██║██║╚██╔╝██║██╔══╝  
-╚███╔███╔╝███████╗███████╗╚██████╗╚██████╔╝██║ ╚═╝ ██║███████╗
- ╚══╝╚══╝ ╚══════╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝ 
- \n");
-  flush stdout;
-  Unix.sleepf 1.5;
-  ANSITerminal.(print_string [red] "
+     ██╗    ██╗███████╗██╗      ██████╗ ██████╗ ███╗   ███╗███████╗
+     ██║    ██║██╔════╝██║     ██╔════╝██╔═══██╗████╗ ████║██╔════╝
+     ██║ █╗ ██║█████╗  ██║     ██║     ██║   ██║██╔████╔██║█████╗  
+     ██║███╗██║██╔══╝  ██║     ██║     ██║   ██║██║╚██╔╝██║██╔══╝  
+     ╚███╔███╔╝███████╗███████╗╚██████╗╚██████╔╝██║ ��═╝ ██║███████╗
+     ╚══╝╚══╝ ╚══════╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝ 
+     \n");
+     flush stdout;
+     Unix.sleepf 1.5;
+     ANSITerminal.(print_string [red] "
                 ████████╗ ██████╗ 
-                ╚══██╔══╝██╔═══██╗
-                   ██║   ██║   ██║
+                ╚��═██╔══╝██╔══��██╗
+                   ��█║   ██║   ██║
                    ██║   ██║   ██║
                    ██║   ╚██████╔╝
                    ╚═╝    ╚═════╝ 
                    \n");
-  flush stdout;
-  Unix.sleepf 1.5;
+     flush stdout;
+     Unix.sleepf 1.5;
 
-  ANSITerminal.(print_string [black] " 
-███████╗ ██████╗██████╗  █████╗ ██████╗ ██████╗ ██╗     ███████╗
-██╔════╝██╔════╝██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║     ██╔════╝
-███████╗██║     ██████╔╝███████║██████╔╝██████╔╝██║     █████╗  
-╚════██║██║     ██╔══██╗██╔══██║██╔══██╗██╔══██╗██║     ██╔══╝  
-███████║╚██████╗█��║  ██��██║  ██║██████╔╝████ █╔=█  ██╗█████��█╗
-���══==═╝ ╚════=╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═════╝ ╚══════╝╚══════╝
-  \n");
-  flush stdout;
-  Unix.sleepf 1.5;
-  ANSITerminal.erase Above;
-  ANSITerminal.set_cursor 1 1;
-  Unix.sleepf 1.5;
+     ANSITerminal.(print_string [black] " 
+     ██████╗ ██████╗ ██████╗  █████╗ ██████╗ ██████  ██╗     ███████
+     ██╔════╝██╔═══╝ ██╔══██ ██╔══██╗██╔══██╗██╔══██╗██║     ██╔════╝
+     ███████╗██║     ██████╔╝███████║██████╔╝██████╔╝██║     █████╗  
+     ╚════██║██║     ██╔══██╗██╔══██║██╔══██╗██╔══██╗██║     ██╔══╝  
+     ███████║╚██████╗██║  ██║██║  ██║██████╔╝██████╔╝███████╗███████╗
+     ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═════╝ ╚══════╝╚══════╝
+     \n");
+     flush stdout;
+     Unix.sleepf 1.5;
+     ANSITerminal.erase Above;
+     ANSITerminal.set_cursor 1 1;
+     Unix.sleepf 1.5;
 
 
-  ANSITerminal.(print_string [blue] "The game currently has 2 Players
-For a turn to be valid, all words placed must be in the Scrabble dictionary
-and all tiles must be connected to the center (8,8) \n\n");
-  Pervasives.flush stdout;
-  Unix.sleepf 4.0;
-  ANSITerminal.(print_string [green]
+     ANSITerminal.(print_string [blue] "The game currently has 2 Players
+     For a turn to be valid, all words placed must be in the Scrabble dictionary
+     and all tiles must be connected to the center (8,8) \n\n");
+     Pervasives.flush stdout;
+     Unix.sleepf 4.0;
+     ANSITerminal.(print_string [green]
                   "The commands are 
         place [Char] [x_pos] [y_pos]
         remove [x_pos] [y_pos]
@@ -182,14 +247,10 @@ and all tiles must be connected to the center (8,8) \n\n");
         endturn
         help
         quit \n \n");
-  Pervasives.flush stdout;
-  Unix.sleepf 4.0;
-  ANSITerminal.erase Above;
-  ANSITerminal.set_cursor 1 1;
-  ANSITerminal.(print_string [red] "The board:");
-  Pervasives.flush stdout;
-  Unix.sleep 1;
-  print_newline(); State.print_board_from_state (State.init_state 2); 
+     Pervasives.flush stdout;
+     Unix.sleepf 4.0; *)
+  erase_above ();
+  State.print_board_from_state (State.init_state 2); 
   print_newline();
   ignore (execute_command (State.init_state 2))
 

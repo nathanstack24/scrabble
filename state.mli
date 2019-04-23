@@ -59,6 +59,10 @@ val end_turn : t -> t
     [[(player1, player1's score); (player2, player2's score); ...]] . *)
 val get_scores : t -> (int*int) list
 
+(** [get_score st player_id] returns the score for player with player id 
+  * [player_id] in [st]. *)
+val get_score : t -> int -> int
+
 (** [print_inventory state] prints the current player's inventory *)
 val print_inventory : t -> unit
 
