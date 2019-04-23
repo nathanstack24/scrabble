@@ -248,8 +248,9 @@ let print_scores (state:t) =
   let rec loop players = 
     match players with 
     |[] -> print_newline ();
-    |h::t -> print_endline ("Player " ^ (string_of_int h.player_id) ^ ": " ^  
-                            (string_of_int h.score)); (loop t)
+    |h::t -> ANSITerminal.print_string [ANSITerminal.green] 
+               ("Player " ^ (string_of_int h.player_id) ^ ": " ^  
+                (string_of_int h.score)^ "\n"); (loop t)
   in loop state.players
 
 let print_winner (state:t) = 

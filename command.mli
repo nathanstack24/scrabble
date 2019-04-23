@@ -3,11 +3,9 @@ type command =
   | Quit
   | Place of Board.tile*Board.position
   | Remove of Board.position
-  | Inventory
   | Endturn
   | Score
   | Help
-  | Board
   | Perfect
 
 (** The exception raised when a command is malformed*)

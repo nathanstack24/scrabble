@@ -1,3 +1,16 @@
+module String_hash : Hashtbl.HashedType = struct
+  type t = string
+  let equal s1 s2 = String.equal s1 s2
+  let hash s = 
+    let list = List.init (String.length s) (String.get s) in 
+    let rec loop (lst:char list) (acc:int) = 
+      match lst with 
+      | [] -> acc
+      | h::t -> loop t (acc + (Char.code h)) in 
+    loop list 0
+end
+
+
 module Dict = Set.Make(String)
 
 module Values = Map.Make(Char)

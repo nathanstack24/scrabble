@@ -27,7 +27,8 @@ let rec get_next_command (player_id:int) (st:State.t) =
   | text -> 
     try Command.parse text with
     | Board.InvalidChar -> print_endline ("Bad command. You can only place" ^ 
-                                          "letters that are currently in your inventory. Try again.");
+                                          "letters that are currently in your" ^
+                                          "inventory. Try again.");
       flush stdout;
       Unix.sleep 1;
       erase_above ();
@@ -112,9 +113,6 @@ let rec execute_command (st:State.t) : State.t =
        Unix.sleep 1;
        erase_above(); State.print_board_from_state st; print_newline(); 
        execute_command st) 
-
-  | (Command.Inventory) -> print_string ("Your letters are: " ); 
-    State.print_inventory st; print_newline (); execute_command st
   | (Command.Endturn) -> 
     (try let new_st = State.end_turn st in 
        let new_words = State.get_state_word_diff st new_st in
@@ -167,7 +165,14 @@ You made the following word(s): " ^ (word_list_to_string new_words) ^ "\n" ^
 
        exit 0)
 
-  | (Command.Score) -> State.print_scores st; execute_command st
+  | (Command.Score) -> 
+    print_newline();
+    State.print_scores st;
+    flush stdout;
+    Unix.sleepf 1.5; 
+    erase_above ();
+    State.print_board_from_state st; 
+    print_newline(); execute_command st
 
   | (Command.Help) ->   print_newline(); ANSITerminal.(print_string [green]
                                                          "The commands are 
@@ -181,10 +186,6 @@ You made the following word(s): " ^ (word_list_to_string new_words) ^ "\n" ^
       help to print this message again
       quit to quit\n \n"); 
     erase_above ();
-    State.print_board_from_state st; 
-    print_newline(); execute_command st
-
-  |Command.Board -> erase_above ();
     State.print_board_from_state st; 
     print_newline(); execute_command st
 
