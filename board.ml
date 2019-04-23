@@ -432,6 +432,15 @@ let get_board_word_diff old_board new_board =
     |[] -> []
   in loop new_words
 
+let rec chars_on_board_helper (acc:char list) = function
+  | [] -> acc
+  | h::t -> match h.occ with 
+    |Some c -> chars_on_board_helper (c::acc) t
+    |None -> chars_on_board_helper acc t
+
+let chars_on_board (board:t) :(char list) = 
+  chars_on_board_helper [] board
+
 let print_tile (tile:tile) = print_char tile
 
 let get_row_num (board:t) :int = List.length (get_board_row 1 board)
