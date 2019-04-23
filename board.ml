@@ -478,10 +478,19 @@ let rec get_word_score (word_mul: (tile*string) list ) (n:int) : int =
     else if mul = "tw" then 3*(char_score + get_word_score word_mul (n-1))
     else char_score + get_word_score word_mul (n-1)
 
-(** get_word_difference returns the words that are in list2 that are not in 
-    list1*)
+(** [remove_one_of elt lst acc] returns [lst] without one of [elt] if it is in 
+    [lst]*)
+let rec remove_one_of elt lst acc= 
+  match lst with 
+  |h::t -> if h = elt then (t@acc) else remove_one_of elt t (h::acc)
+  |[] -> acc
+
+(** [get_word_difference lst1 lst2] returns the words that are in list2 that are
+    not in list1*)
 let rec get_word_difference wordlist1 wordlist2 = 
-  List.filter (fun w2-> List.mem w2 wordlist1 = false) wordlist2
+  match wordlist1 with 
+  | h::t -> get_word_difference t (remove_one_of h wordlist2 [])
+  | [] -> wordlist2
 
 let get_board_score (old_board:t) (new_board:t)= 
   let old_words = (word_mul_list_from_board_row old_board) @ 

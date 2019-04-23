@@ -199,13 +199,13 @@ You made the following word(s): " ^ (word_list_to_string new_words) ^ "\n" ^
   |Command.Perfect -> let new_st = State.perfect_turn st in 
     print_newline(); State.print_board_from_state new_st;
     print_newline(); execute_command (new_st)
-  |_ -> print_endline 
-          "Bad command. Enter 'help' for a list of valid commands";
+  |_ -> print_endline  "Bad command. Enter 'help' for a list of valid commands"; 
     flush stdout;
     Unix.sleep 1;
     erase_above ();
-    print_newline(); execute_command st
-
+    State.print_board_from_state st; 
+    print_newline();
+    execute_command st
 let initial_commands = 0
 
 (** [get_integer low upper] prompts the user to input an integer which is only
@@ -260,29 +260,32 @@ let main () =
      ANSITerminal.set_cursor 1 1;
      Unix.sleepf 1.5;
   *)
-  ANSITerminal.(print_string [blue] ("Enter number of players (1-4): ") );
+  ANSITerminal.(print_string [blue] ("\n\nEnter number of players (1-4): ") );
   let player_num = get_integer 0 5 in
-  State.print_board_from_state (State.init_state (player_num)); 
-  ANSITerminal.(print_string [blue] ("The game has "^ 
-                                     (string_of_int player_num) ^" Players
-     For a turn to be valid, all words placed must be in the Scrabble dictionary
-     and all tiles must be connected to the center (8,8) \n\n") );
+  Pervasives.flush stdout;
+  erase_above ();
+  ANSITerminal.(print_string [blue] ("\nThe game has "^ 
+                                     (string_of_int player_num) ^ 
+                                     " Players
+For a turn to be valid, all words placed must be in the Scrabble dictionary
+and all tiles must be connected to the center (8,8) \n\n") );
   Pervasives.flush stdout;
   Unix.sleepf 4.0;
   ANSITerminal.(print_string [green]
                   "The commands are 
-        place [Char] [x_pos] [y_pos]
-        remove [x_pos] [y_pos]
-        inventory 
-        score
-        board
-        endturn
-        help
-        quit \n \n");
+place [Char] [x_pos] [y_pos]
+remove [x_pos] [y_pos]
+inventory 
+score
+board
+endturn
+help
+quit \n \n");
   Pervasives.flush stdout;
   Unix.sleepf 4.0; 
   erase_above ();
 
+  State.print_board_from_state (State.init_state (player_num)); 
 
   print_newline();
   ignore (execute_command (State.init_state player_num))

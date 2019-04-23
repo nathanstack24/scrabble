@@ -157,9 +157,9 @@ let board_tests = [
   make_bad_boards_tests "invalid board 5x5 vertical ca" boardvertca BadWord;
   make_bad_boards_tests "invalid board 5x5 c" board5x5c OneLetter;
 
-  make_get_board_score_tests "5x5 cab board score" board5x5 board5x5cab 7;
+  make_get_board_score_tests "5x5 cab board score" board5x5 board5x5cab 14;
   make_get_board_score_tests "5x5 empt -> cab be be board score" 
-    board5x5 board5x5cabbe 19;
+    board5x5 board5x5cabbe 26;
   make_get_board_score_tests "5x5 cab -> ab be be board score" 
     board5x5cab board5x5cabbe 12;
 
