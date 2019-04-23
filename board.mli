@@ -113,3 +113,7 @@ val get_x_pos : position -> int
 
 (** [get_y_pos pos] returns the y coordinate of [pos]*)
 val get_y_pos : position -> int
+
+val are_connected_to_center : position -> t -> bool
+
+val check_words : t -> bool

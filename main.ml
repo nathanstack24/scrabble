@@ -123,7 +123,9 @@ You made the following word(s): " ^ (word_list_to_string new_words) ^ "\n" ^
   |Command.Board -> print_newline(); State.print_board_from_state st;
     print_newline(); execute_command st
 
-  |Command.Perfect -> execute_command (State.perfect_turn st)
+  |Command.Perfect -> let new_st = State.perfect_turn st in 
+    print_newline(); State.print_board_from_state new_st;
+    print_newline(); execute_command (new_st)
 
 let initial_commands = 0
 
@@ -157,7 +159,7 @@ let main () =
 ██╔════╝██╔════╝██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║     ██╔════╝
 ███████╗██║     ██████╔╝███████║██████╔╝██████╔╝██║     █████╗  
 ╚════██║██║     ██╔══██╗██╔══██║██╔══██╗██╔══██╗██║     ██╔══╝  
-███████║╚██████╗█��║  ██��██║  ██║██████╔╝████ █╔=█  ██╗█████��█╗
+███����███║╚██████╗█��║  ██��██║  ██║██████╔╝████ █╔=█  ██╗█████��█╗
 ���══==═╝ ╚════=╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═════╝ ╚══════╝╚══════╝
   \n");
   flush stdout;

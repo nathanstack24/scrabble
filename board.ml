@@ -255,8 +255,35 @@ let word_list_from_board_row (board:t) =
     the English dictionary *)
 let rec are_words_valid word_list dict = 
   match word_list with 
-  |h::t -> (Dict.mem (String.uppercase_ascii h) dict) && (are_words_valid t dict)
+  |h::t -> if (Dict.mem (String.uppercase_ascii h) dict) = false then false 
+    else are_words_valid t dict
   |[] -> true
+
+
+let check_word_list_from_board_col (board:t) = 
+  let first_letters = first_letter_squares_col board in
+  let rec loop pos_list board = 
+    match pos_list with
+    |[] -> true
+    |h::t ->
+      let col_word = find_word_column h board in 
+      if (Dict.mem (String.uppercase_ascii col_word) dict) = false then false 
+      else loop t board
+  in loop first_letters board
+
+let check_word_list_from_board_row (board:t) = 
+  let first_letters = remove_dups (first_letter_squares_row board) [] in
+  let rec loop pos_list board = 
+    match pos_list with
+    |[] -> true
+    |h::t ->
+      let row_word = find_word_row h board in 
+      if (Dict.mem (String.uppercase_ascii row_word) dict) = false then false 
+      else loop t board
+  in loop first_letters board
+
+let check_words (board) = 
+  check_word_list_from_board_col board && check_word_list_from_board_row board
 
 let is_valid_board (board:t) = 
   let word_list = (word_list_from_board_row board) @ (word_list_from_board_col board) in
