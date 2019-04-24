@@ -47,7 +47,7 @@ exception InvalidNumPlayers
 
 (** [init_state num_players] is the initial state of the Scrabble game with
   * [num_players] players. *)
-val init_state : int -> t 
+val init_state : int -> int -> t 
 
 (** [place_tile t p curr_turn] updates the curr_turn with tile t at 
     position p and removes it from the current player's inventory. 
@@ -109,10 +109,27 @@ val get_state_word_diff : t -> t -> string list
     scores in [new_state] from the sum of the scores in [old_state] *)
 val get_state_score_diff : t -> t -> int
 
+<<<<<<< Updated upstream
 (** [new_state_with_cursor_change st change] returns a new state with updated
   * cursor position based on the cursor change indicated by [change]. *)
 val new_state_with_cursor_change : t -> cursor_change -> t 
 
 val perfect_turn : t -> t
+=======
+(*Use stuff from perfect_turn to find best state from state list*)
+val best_state: t list -> t -> t
+>>>>>>> Stashed changes
 
+(**Takes in a list of words and a state, returns the state with the highest
+   point value*)
+val find_placements: string -> t -> t list 
 
+(**Places the word [string] on the board with the first letter at 
+   Board.position from right to left*)
+val place_word_right: Board.tile list -> Board.position -> t -> t option
+
+(**Places the word [string] on the board with the first letter at 
+   Board.position from top to bottom*)
+val place_word_down: Board.tile list -> Board.position -> t -> t option
+
+val perfect_turn : t -> t

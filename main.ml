@@ -279,6 +279,9 @@ let main () =
   *)
   ANSITerminal.(print_string [blue] ("\n\nEnter number of players (1-4): ") );
   let player_num = get_integer 0 5 in
+  ANSITerminal.(print_string [blue] ("\n\nEnter number of bots (1-"
+                                     ^string_of_int (player_num-1)^ "): ") );
+  let npc_num = if player_num > 1 then get_integer 0 player_num else 0 in
   Pervasives.flush stdout;
   erase_above ();
   ANSITerminal.(print_string [blue] ("\nThe game has "^ 

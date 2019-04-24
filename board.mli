@@ -121,3 +121,10 @@ val are_connected_to_center : position -> t -> bool
 val check_words : t -> bool
 
 val possible_words_dict: tile list -> t -> string list
+
+(** [get_right_pos pos] returns the position of the neighboring tile to the 
+    right*)
+val get_right_pos : position -> position
+
+(** [get_down_pos pos] returns the position of the neighboring tile below*)
+val get_down_pos : position -> position

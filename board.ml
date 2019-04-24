@@ -552,4 +552,7 @@ let get_x_pos pos = fst pos
 
 let get_y_pos pos = snd pos
 
+let get_right_pos pos = ((fst pos + 1), snd pos)
+
+let get_down_pos pos = (fst pos, snd pos - 1)
 

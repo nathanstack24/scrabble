@@ -4,7 +4,8 @@ open Dictionary
 type player = {
   player_id: int;
   score: int; 
-  inv: tile list}
+  inv: tile list;
+  bot: bool}
 
 type curr_turn = {
   curr_player: player;
@@ -90,16 +91,18 @@ let rec from_bag_to_inv (bag: tile list) (inv: tile list) =
     from_bag_to_inv new_tile_bag new_inv
 
 
-let init_state (num_players: int) : t =
+let init_state (num_players: int) (num_bots: int): t =
   if (num_players<2 || num_players>4) then raise InvalidNumPlayers else 
-    let rec create_players (num:int) (acc:player list) (bag: tile list) = 
+    let rec create_players (num:int) (num_pc:int) (acc:player list) (bag: tile list) = 
       if num=0 then (bag,acc) else 
         let new_data = from_bag_to_inv bag [] in 
         let new_bag = fst new_data in 
         let new_inv = snd new_data in 
-        let new_player: player = {player_id=num; score=0; inv=new_inv} in 
-        create_players (num-1) (new_player::acc) new_bag  in 
-    let data = create_players num_players [] (make_tile_bag init_tile_bag []) in 
+        let new_player: player = if num_pc > 0 then 
+            {player_id=num; score=0; inv=new_inv; bot = true} else 
+            {player_id=num; score=0; inv=new_inv; bot = false} in 
+        create_players (num-1) (num_pc-1) (new_player::acc) new_bag  in 
+    let data = create_players num_players num_bots [] (make_tile_bag init_tile_bag []) in 
     let bag = fst data in 
     let players = snd data in
     let new_curr_turn = {curr_player=(List.hd players); new_squares=[]} in 
@@ -424,22 +427,66 @@ let all_word_states (state:t) =
       loop t ((row_words @ col_words) @ acc) bad_start
   in loop pos_list [state] []
 
+let rec place_word_right word pos state : t option= 
+  match word with 
+  |[] -> Some state
+  |h::t -> try (let new_state = place_tile h pos state in
+                place_word_right t (get_right_pos pos) new_state) with
+  |Occupied -> if get_occ (get_square (pos) state.board) = Some h then 
+      place_word_right t (get_right_pos pos) state else
+      None
+  |_ -> None
 
-let perfect_turn init_state = 
-  let all_connected = List.filter (fun s -> are_connected_to_center (make_pos 8 8) s.board) (all_word_states init_state) in print_endline ("made it here "^ string_of_int (List.length all_connected))  ;
-  (*let all_words = List.filter (fun s -> check_words s.board) all_connected in print_endline "made it here2";*)
+let rec place_word_down word pos state : t option= 
+  match word with 
+  |[] -> Some state
+  |h::t -> try (let new_state = place_tile h pos state in
+                place_word_down t (get_down_pos pos) new_state) with
+  |Occupied -> if get_occ (get_square (pos) state.board) = Some h then 
+      place_word_down t (get_down_pos pos) state else
+      None
+  |_ -> None
+
+(*Note: function takes in a list of positions on the board. *)
+let rec find_placements_helper word (state:t) (acc:t list) = function
+  | [] -> acc
+  | h::t -> match ((place_word_right word h state), (place_word_down word h state)) with 
+    | (Some s1, Some s2) -> find_placements_helper word state (s1::s2::acc) t
+    | (Some s1, None) -> find_placements_helper word state (s1::acc) t
+    | (None, Some s2) -> find_placements_helper word state (s2::acc) t
+    | (None, None) -> find_placements_helper word state acc t
+
+let rec find_placements word (state:t) = 
+  let clist = List.rev (make_tile_bag (List.init (String.length word) (String.get word)) []) in 
+  find_placements_helper clist state [] (get_board_positions state.board)
+
+let best_state state_lst init_state = 
   let rec loop max_score_state state_lst init_state max_score=
     match state_lst with 
     |[] -> max_score_state 
     |state::t -> 
-      let curr_score = get_new_score init_state.board state.board in 
+      let merged_board = merge_boards state.curr_turn.new_squares state.board in 
+      let curr_score = get_new_score init_state.board merged_board in 
       if curr_score >  max_score 
-      then (print_int curr_score; loop state t init_state curr_score)
+      then  loop state t init_state curr_score 
       else loop max_score_state t init_state max_score
-  in loop init_state all_connected init_state 0
+  in loop init_state state_lst init_state 0
 
-let perfect_turn2 (s:t) = 
+let perfect_turn init_state = 
   let possible_words = Board.possible_words_dict 
-      (s.curr_turn.curr_player.inv) s.board in possible_words
-(*get_board_positions is USEFUl *)
-(*try_letter_col & row iterates through respective thing*)
+      (init_state.curr_turn.curr_player.inv) init_state.board in
+  let rec loop word_list acc = 
+    match word_list with
+    |h::t -> let placements = find_placements h init_state 
+      in loop t (placements @ acc )
+    |[] -> acc 
+  in
+  let possible_states = loop possible_words [] in 
+  let connected_states = List.filter (fun s -> 
+      let merged = merge_boards s.curr_turn.new_squares s.board in are_connected_to_center
+        (make_pos 8 8)  merged) possible_states in
+  let valid_states = List.filter (fun s -> 
+      let merged = merge_boards s.curr_turn.new_squares s.board in check_words
+        merged) connected_states in 
+  best_state valid_states init_state
+
