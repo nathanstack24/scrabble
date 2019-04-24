@@ -19,6 +19,14 @@ type t = {
   cursor: position
 }
 
+type cursor_change = 
+  | Left
+  | Right
+  | Up
+  | Down
+  | Invalid
+
+
 exception MisplacedTile
 exception EmptyBoardSquare
 exception EndGame
@@ -26,6 +34,7 @@ exception Occupied
 exception NotInInv
 exception InvalidNumPlayers
 exception InvalidPlayerID
+exception NoCursorChange
 
 
 (** [get_cursor_xpos st] returns the x position of the cursor in state [st] *)
@@ -51,6 +60,17 @@ let rec make_tile_bag (char_lst: char list) (acc:tile list) : tile list =
   match char_lst with
   |[] -> acc
   |h::t -> make_tile_bag t ((make_tile h)::acc)
+
+let new_state_with_cursor_change (st: t) (change:cursor_change) = 
+  let pos = st.cursor in 
+  let x = get_x_pos pos in 
+  let y = get_y_pos pos in
+  match change with 
+  | Left -> if x=1 then st else {st with cursor=(make_pos (x-1) y)}
+  | Right -> if x=15 then st else {st with cursor=(make_pos (x+1) y)}
+  | Up -> if y=15 then st else {st with cursor=(make_pos x (y+1))}
+  | Down -> if y=1 then st else {st with cursor=(make_pos x (y-1))}
+  | Invalid -> failwith "Error: tried to initialize new state with invalid cursor"
 
 
 (** [from_bag_to_inv bag inv] returns a tuple whose first element is a tile list

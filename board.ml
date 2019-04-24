@@ -383,7 +383,7 @@ let get_bsquare_color bsquare =
 (** [is_cursor_pos] returns a list of ANSITerminal.style styles used to print
   * on the terminal.  *)
 let is_cursor_pos (b:board_square) (cursor:position) : ANSITerminal.style list = 
-  if b.pos=cursor then [ANSITerminal.Blink; ANSITerminal.on_black] else []
+  if b.pos=cursor then [ANSITerminal.Blink; ANSITerminal.on_yellow] else []
 
 
 (* Prints the given list of board_squares IN ORDER to the console. *)

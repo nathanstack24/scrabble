@@ -27,9 +27,9 @@ let parse (str:string) (st:State.t) : command =
       let x = State.get_cursor_xpos st in 
       let y = State.get_cursor_ypos st in 
       Remove (Board.make_pos x y)
-    | "endturn"::t -> Endturn
-    | "score"::t -> Score
-    | "help"::t -> Help
+    | "endturn"::[] -> Endturn
+    | "score"::[] -> Score
+    | "help"::[] -> Help
     | "perfect"::t -> Perfect
     | c::[] -> 
       let x = State.get_cursor_xpos st in 

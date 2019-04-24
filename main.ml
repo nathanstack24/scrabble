@@ -15,41 +15,64 @@ let erase_above = fun () ->
   ANSITerminal.erase Above;
   ANSITerminal.set_cursor 1 2
 
+let default = Unix.tcgetattr Unix.stdin
+
+let set_canonical on =
+  let attr = Unix.tcgetattr Unix.stdin in
+  let attr' = { attr with c_icanon = on } in
+  Unix.tcsetattr Unix.stdin Unix.TCSAFLUSH attr'
+
+let rec detect_cursor_changes = fun () ->
+  set_canonical false;
+  match Pervasives.input_char stdin with
+  | 'a' -> Left
+  | 'd' -> Right
+  | 'w' -> Up
+  | 's' -> Down
+  | '\n' -> raise NoCursorChange
+  | _ -> Invalid
+
+
 let rec get_next_command (player_id:int) (st:State.t) = 
   print_endline ("Your turn, Player " ^ string_of_int (player_id)) ;
   let score = List.assoc player_id (State.get_scores st) in
   print_endline ("Your score is: " ^ (string_of_int score));
   print_string ("Your letters are: " ); State.print_inventory st; print_newline();
-  print_string "> ";
-  match read_line () with
-  | exception End_of_file -> exit 1
-  | text -> 
-    try Command.parse text st with
-    | Board.InvalidChar -> print_endline ("Bad command. You can only place" ^ 
-                                          "letters that are currently in your" ^
-                                          "inventory. Try again.");
-      flush stdout;
-      Unix.sleep 1;
-      erase_above ();
-      State.print_board_from_state st; 
-      print_newline(); get_next_command player_id st
+  print_string "> "; flush stdout;
+  try 
+    (let change = detect_cursor_changes () in
+     set_canonical true;
+     if change=Invalid then (erase_above ();
+                             State.print_board_from_state st; 
+                             print_newline(); get_next_command player_id st) else
+       let new_st = new_state_with_cursor_change st change in 
+       erase_above ();
+       State.print_board_from_state new_st; 
+       print_newline(); get_next_command player_id new_st)
+  with NoCursorChange ->
+    (Unix.tcsetattr Unix.stdin Unix.TCSANOW default;
+     match read_line () with
+     | exception End_of_file -> exit 1
+     | text -> 
+       try Command.parse text st with
+       | Board.InvalidChar -> print_endline ("Bad command. You can only place" ^ 
+                                             "letters that are currently in your" ^
+                                             "inventory. Try again.");
+         flush stdout;
+         Unix.sleep 1;
+         erase_above ();
+         State.print_board_from_state st; 
+         print_newline(); get_next_command player_id st
+       | Command.Empty 
+       | Command.Malformed 
+       | Failure _ ->
+         print_endline "Bad command. Enter 'help' for a list of valid commands";
+         flush stdout;
+         Unix.sleep 1;
+         erase_above ();
+         State.print_board_from_state st; 
+         print_newline(); get_next_command player_id st)
 
-    | Command.Malformed -> 
-      print_endline "Bad command. Enter 'help' for a list of valid commands";
-      flush stdout;
-      Unix.sleep 1;
-      erase_above ();
-      State.print_board_from_state st; 
-      print_newline(); get_next_command player_id st
-    | Command.Empty -> get_next_command player_id st 
-    | Failure x -> 
-      print_endline "Bad command. Enter 'help' for a list of valid commands"; 
-      flush stdout;
-      Unix.sleep 1;
-      erase_above ();
-      State.print_board_from_state st; 
-      print_newline();
-      get_next_command player_id st
 
 
 let rec execute_command (st:State.t) : State.t =
@@ -131,28 +154,31 @@ You made the following word(s): " ^ (word_list_to_string new_words) ^ "\n" ^
 
                      print_newline(); execute_command (new_st))
      with 
-     |Board.BadWord -> State.print_board_from_state st; 
-       print_newline(); ANSITerminal.(print_string [red]
+     |Board.BadWord ->  ANSITerminal.(print_string [red]
                                         ("Some words on the board are not "^
                                          "valid. Try again. \n"));
+       flush stdout;
+       Unix.sleep 1;
        erase_above ();
        State.print_board_from_state st; 
        print_newline(); execute_command st
      |Board.NotConnected -> 
-       State.print_board_from_state st; 
        print_newline(); 
        ANSITerminal.(print_string [red]
                        ("Some tiles on the board are not connected to the " ^ 
                         "center tile. Try again \n")); 
+       flush stdout;
+       Unix.sleep 1;
        erase_above ();
        State.print_board_from_state st; 
        print_newline(); execute_command st
      |Board.OneLetter ->
-       State.print_board_from_state st; 
        print_newline(); 
        ANSITerminal.(print_string [red]
                        ("Words placed must be at least 2 letters long. " ^ 
                         "Try again \n")); 
+       flush stdout;
+       Unix.sleep 1;
        erase_above ();
        State.print_board_from_state st; 
        print_newline(); execute_command st
@@ -192,6 +218,7 @@ You made the following word(s): " ^ (word_list_to_string new_words) ^ "\n" ^
     print_newline(); execute_command (new_st)
 
 
+(** [parse_num_players str] returns the integer *)
 let parse_num_players (str: string) = 
   let cmd = (clean_str (String.split_on_char ' ' (String.trim str))) in
   if List.length cmd = 0 then raise Empty else 

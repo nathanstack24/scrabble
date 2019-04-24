@@ -14,6 +14,19 @@ type player
 (** The type representing the actions of a player during their current turn *)
 type curr_turn
 
+(** The type representing which arrow key the user pressed when attempting
+  * to change the location of the cursor. *)
+type cursor_change = 
+  | Left
+  | Right
+  | Up
+  | Down
+  | Invalid
+
+(** Raised when the user does not press any of the arrow keys (i.e. position
+  * of the cursor does not change) *)
+exception NoCursorChange
+
 (** The exception type returned when a tile is placed in a way that is illegal*)
 exception MisplacedTile
 
@@ -95,6 +108,10 @@ val get_state_word_diff : t -> t -> string list
     from the newly formed words in [new_state] by substracting the sum of the
     scores in [new_state] from the sum of the scores in [old_state] *)
 val get_state_score_diff : t -> t -> int
+
+(** [new_state_with_cursor_change st change] returns a new state with updated
+  * cursor position based on the cursor change indicated by [change]. *)
+val new_state_with_cursor_change : t -> cursor_change -> t 
 
 val perfect_turn : t -> t
 
