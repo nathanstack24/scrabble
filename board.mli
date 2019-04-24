@@ -110,9 +110,6 @@ val get_col_num : t -> int
     squares in the board*)
 val get_board_positions : t -> position list 
 
-(**Take a board [board] and return the list of chars on that board *)
-val chars_on_board: t -> char list
-
 (** [get_x_pos pos] returns the x coordinate of [pos]*)
 val get_x_pos : position -> int
 
@@ -122,3 +119,5 @@ val get_y_pos : position -> int
 val are_connected_to_center : position -> t -> bool
 
 val check_words : t -> bool
+
+val possible_words_dict: tile list -> t -> string list

@@ -522,27 +522,23 @@ let get_board_word_diff old_board new_board =
     |[] -> []
   in loop new_words
 
-let rec chars_on_board_helper (acc:char list) = function
+let rec bsquares_to_chars_helper (acc:char list) = function
   | [] -> acc
   | h::t -> match h.occ with 
-    |Some c -> chars_on_board_helper (c::acc) t
-    |None -> chars_on_board_helper acc t
+    |Some c -> bsquares_to_chars_helper (c::acc) t
+    |None -> bsquares_to_chars_helper acc t
 
 (**Take a board [board] and return the list of chars on that board *)
-let chars_on_board (board:t) :(char list) = 
-  chars_on_board_helper [] board
+let bsquares_to_chars (board:t) :(char list) = 
+  bsquares_to_chars_helper [] board
 
-(**Will filter return [false] if string [s] cannot be made 
-   up of chars in [clist]*)
-(**NEEDS WORK AT THE MOMENT *)
-let filter_func clist s = 
-  let wordclist = failwith "unimplemented" in wordclist
-
+let tiles_to_chars (tiles:tile list) : char list = tiles
 (**Returns a new dictionary of all words that could be made with the current
    [inv] and [board] *)
-(* let possible_words_dict inv board = 
-   let clist = List.append inv (chars_on_board board) in
-   Hashtbl.filter dict (filter_func clist) dict *)
+let possible_words_dict inv board = 
+  let clist = List.append (tiles_to_chars inv) (bsquares_to_chars board) in
+  let f s _ acc = (if (Dictionary.filter_func clist s) then s::acc else acc) in 
+  Hashtbl.fold f dict []
 
 let print_tile (tile:tile) = print_char tile
 
@@ -555,3 +551,5 @@ let get_board_positions board = List.map (fun bs -> get_pos bs) board
 let get_x_pos pos = fst pos
 
 let get_y_pos pos = snd pos
+
+
