@@ -4,16 +4,14 @@
 
 (**********************************************************************)
 
-(** [Dict] is the module used to maintain a Scrabble dictionary *)
-module Dict: Set.S with type elt = string
-
 (** [Values] is the module used to determine the number of points that each
   * letter is worth in Scrabble *)
 module Values: Map.S with type key = char
 
-(** [create_dictionary] is a dictionary containing all words in the official
-  * Scrabble dictionary*)
-val create_dictionary: Dict.t
+(** [dict_hash_table] is a hash table containing all words in the official
+  * Scrabble dictionary. The keys in the hashtable are strings which map to
+  * unit values. *)
+val dict: (string,unit) Hashtbl.t
 
 (** [tile_values] is a mapping from all characters in the alphabet to the number
   * of points that particular character is worth in Scrabble. *)

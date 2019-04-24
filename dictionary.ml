@@ -1,19 +1,7 @@
-module String_hash : Hashtbl.HashedType = struct
-  type t = string
-  let equal s1 s2 = String.equal s1 s2
-  let hash s = 
-    let list = List.init (String.length s) (String.get s) in 
-    let rec loop (lst:char list) (acc:int) = 
-      match lst with 
-      | [] -> acc
-      | h::t -> loop t (acc + (Char.code h)) in 
-    loop list 0
-end
-
-
-module Dict = Set.Make(String)
-
 module Values = Map.Make(Char)
+
+
+let dict = Hashtbl.create 300000
 
 
 (** [read_channel channel acc] returns a list of all lines in the text file
@@ -46,10 +34,11 @@ let parse_text (l: string list) =
   * Requires: - [list] is a string list where each element is a word in
   *             text file "scrabble_dict.txt".
   *           - [acc] is a   *)
-let rec add_words_to_dict (words: string list) (acc:Dict.t) = 
+let rec add_words_to_dict (words: string list) = 
   match words with 
-  | [] -> acc
-  | h::t -> add_words_to_dict t (Dict.add h acc)
+  | [] -> ()
+  | h::t -> Hashtbl.add dict h (); 
+    add_words_to_dict t 
 
 
 let create_dictionary =
@@ -58,7 +47,7 @@ let create_dictionary =
     let channel = Pervasives.open_in dict_text_file in
     let all_words_list = read_channel channel [] in       
     let all_words = parse_text all_words_list in 
-    add_words_to_dict all_words Dict.empty
+    add_words_to_dict all_words
   with 
   | t -> raise Not_found
 

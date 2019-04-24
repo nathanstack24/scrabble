@@ -9,8 +9,6 @@ type board_square = {
   occ : tile option
 }
 
-let dict = create_dictionary
-
 type t = board_square list
 
 exception Occupied of board_square
@@ -55,7 +53,7 @@ let set_occ (square:board_square) (tile:tile) =
 let rec get_square (pos:position) (board:t) = 
   match board with 
   | [] -> raise (InvalidPos pos)
-  | h::t -> if (h.pos = pos) then h else get_square pos {board with b_squares=t}
+  | h::t -> if (h.pos = pos) then h else get_square pos t
 
 let rec set_square_helper  (acc:t) (tile:tile) (pos:position) (board:t)  = 
   match board with 
@@ -323,7 +321,7 @@ let word_mul_list_from_board_row (board:t) =
     the English dictionary *)
 let rec are_words_valid word_list dict = 
   match word_list with 
-  |h::t -> if (Dict.mem (String.uppercase_ascii h) dict) = false then false 
+  |h::t -> if (Hashtbl.mem dict (String.uppercase_ascii h)) = false then false 
     else are_words_valid t dict
   |[] -> true
 
@@ -334,7 +332,8 @@ let check_word_list_from_board_col (board:t) =
     |[] -> true
     |h::t ->
       let col_word = find_word_column h board in 
-      if (Dict.mem (String.uppercase_ascii col_word) dict) = false then false 
+      if (Hashtbl.mem dict (String.uppercase_ascii col_word)) = false 
+      then false 
       else loop t board
   in loop first_letters board
 
@@ -345,7 +344,7 @@ let check_word_list_from_board_row (board:t) =
     |[] -> true
     |h::t ->
       let row_word = find_word_row h board in 
-      if (Dict.mem (String.uppercase_ascii row_word) dict) = false then false 
+      if (Hashtbl.mem dict (String.uppercase_ascii row_word)) = false then false 
       else loop t board
   in loop first_letters board
 
@@ -417,14 +416,8 @@ let rec print_board_helper (board:t) (rowcounter:int) (cursor: position) =
   if rowcounter = 0 then ()
   else (
     print_row_num rowcounter;
-<<<<<<< Updated upstream
-    print_ordered_row (List.sort comp_squares_x (get_board_row rowcounter board)); 
-    if rowcounter = 5 then print_string "" else ();
-    print_board_helper board (rowcounter - 1); ())
-=======
     print_ordered_row (List.sort comp_squares_x (get_board_row rowcounter board)) cursor; 
     print_board_helper board (rowcounter - 1) cursor; ())
->>>>>>> Stashed changes
 
 (** [make_x_coord_string col_num] returns the string of integers to be printed
     at the bottom of a board with [col_num] columns*)
@@ -438,13 +431,8 @@ let rec make_x_coord_string col_num =
   lets the helper do the main work. *)
 let print_board (board:t) (cursor:position) : unit = 
   ANSITerminal.(print_string [red] "The board:\n");
-<<<<<<< Updated upstream
-  let n = (List.length (get_board_col 1 board)) in 
-  print_board_helper board n;
-=======
   let n = (List.length (get_board_row 1 board)) in 
   print_board_helper board n cursor;
->>>>>>> Stashed changes
   print_string ("  " ^ (make_x_coord_string n))
 
 
@@ -492,7 +480,7 @@ let rec get_word_score (word_mul: (tile*string) list ) (n:int) : int =
     let mul = snd (List.nth word_mul (n-1)) in 
     if mul = "dl" then  (2*char_score) + get_word_score word_mul (n-1)
     else if mul = "dw" then  2*(char_score + get_word_score word_mul (n-1))
-    else if mul = "tl" then (2*char_score) + get_word_score word_mul (n-1)
+    else if mul = "tl" then (3*char_score) + get_word_score word_mul (n-1)
     else if mul = "tw" then 3*(char_score + get_word_score word_mul (n-1))
     else char_score + get_word_score word_mul (n-1)
 
@@ -552,9 +540,9 @@ let filter_func clist s =
 
 (**Returns a new dictionary of all words that could be made with the current
    [inv] and [board] *)
-let possible_words_dict inv board = 
-  let clist = List.append inv (chars_on_board board) in
-  Dict.filter (filter_func clist) dict
+(* let possible_words_dict inv board = 
+   let clist = List.append inv (chars_on_board board) in
+   Hashtbl.filter dict (filter_func clist) dict *)
 
 let print_tile (tile:tile) = print_char tile
 

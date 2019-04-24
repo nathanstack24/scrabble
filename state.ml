@@ -27,8 +27,6 @@ exception NotInInv
 exception InvalidNumPlayers
 exception InvalidPlayerID
 
-let eng_dict = create_dictionary
-
 (** [remove_from_tile_list tile lst] returns the tile list [lst] without the 
     first occurence of [tile]. Raises Not_found if tile is not in the tile 
     list *)
@@ -276,7 +274,7 @@ let add_curr_turn st bsq =
   {st with curr_turn={ct with new_squares=newsq}}
 
 let print_board_from_state st = Board.print_board 
-    (merge_boards st.curr_turn.new_squares st.board)
+    (merge_boards st.curr_turn.new_squares st.board) st.cursor
 
 let print_inventory st = print_tile_list st.curr_turn.curr_player.inv
 
@@ -308,14 +306,14 @@ let rec try_each_tile (pos:Board.position) (state:t) : t list=
       |InvalidPos pos -> raise (InvalidPos pos)
   in loop [] inv pos state
 
-let is_bad_start bad_start string dict=
-  let string_len = String.length string in 
-  Dict.fold (fun elt prev-> 
-      if string_len > String.length elt then prev 
-      else if List.mem string bad_start then prev
-      else if let word_start = String.sub elt 0 string_len in
-        word_start = String.uppercase_ascii string then false 
-      else prev) dict true 
+let is_bad_start bad_start string dict= true
+(* let string_len = String.length string in 
+   Hashtbl.fold (fun elt prev-> 
+    if string_len > String.length elt then prev 
+    else if List.mem string bad_start then prev
+    else if let word_start = String.sub elt 0 string_len in
+      word_start = String.uppercase_ascii string then false 
+    else prev) dict true  *)
 
 let rec good_play string_list bad_start dict = 
   match string_list with 
