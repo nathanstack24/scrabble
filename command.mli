@@ -6,6 +6,7 @@ type command =
   | Endturn
   | Score
   | Help
+  | Skip
   | Perfect
 
 (** The exception raised when a command is malformed*)

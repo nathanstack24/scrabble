@@ -45,6 +45,10 @@ exception NotInInv
   * with less than two players. *)
 exception InvalidNumPlayers
 
+(** Raised when the user attempts to skip their turn after having placed tiles
+  * on the board in their current turn. *)
+exception CannotSkip
+
 (** [init_state num_players] is the initial state of the Scrabble game with
   * [num_players] players. *)
 val init_state : int -> int -> t 
@@ -66,6 +70,10 @@ val remove_tile : Board.position -> t -> t
 
     Raises: *)
 val end_turn : t -> t
+
+(** [skip_curr_turn st] returns a new state where the turn has passed to the
+  * next player (the current player decided to skip their turn). *)
+val skip_curr_turn : t -> t 
 
 (** [get_cursor_xpos st] returns the x position of the cursor in state [st] *)
 val get_cursor_xpos : t -> int
@@ -109,16 +117,14 @@ val get_state_word_diff : t -> t -> string list
     scores in [new_state] from the sum of the scores in [old_state] *)
 val get_state_score_diff : t -> t -> int
 
-<<<<<<< Updated upstream
 (** [new_state_with_cursor_change st change] returns a new state with updated
   * cursor position based on the cursor change indicated by [change]. *)
 val new_state_with_cursor_change : t -> cursor_change -> t 
 
 val perfect_turn : t -> t
-=======
+
 (*Use stuff from perfect_turn to find best state from state list*)
 val best_state: t list -> t -> t
->>>>>>> Stashed changes
 
 (**Takes in a list of words and a state, returns the state with the highest
    point value*)
@@ -132,4 +138,10 @@ val place_word_right: Board.tile list -> Board.position -> t -> t option
    Board.position from top to bottom*)
 val place_word_down: Board.tile list -> Board.position -> t -> t option
 
+(** [perfect_turn state] places tiles in a way to maximize the number 
+    of points made while maintaining valid placemenets*)
 val perfect_turn : t -> t
+
+(** [is_player_bot id state] returns whether the player with [id] in [state]
+    is a bot or not*)
+val is_player_bot : int -> t -> bool

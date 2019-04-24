@@ -7,6 +7,7 @@ type command =
   | Endturn
   | Score
   | Help
+  | Skip
   | Perfect 
 
 exception Empty
@@ -30,7 +31,8 @@ let parse (str:string) (st:State.t) : command =
     | "endturn"::[] -> Endturn
     | "score"::[] -> Score
     | "help"::[] -> Help
-    | "perfect"::t -> Perfect
+    | "perfect"::[] -> Perfect
+    | "skip"::[] -> Skip
     | c::[] -> 
       let x = State.get_cursor_xpos st in 
       let y = State.get_cursor_ypos st in 

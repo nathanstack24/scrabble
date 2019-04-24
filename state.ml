@@ -36,6 +36,7 @@ exception NotInInv
 exception InvalidNumPlayers
 exception InvalidPlayerID
 exception NoCursorChange
+exception CannotSkip
 
 
 (** [get_cursor_xpos st] returns the x position of the cursor in state [st] *)
@@ -54,6 +55,8 @@ let remove_from_tile_list (tile:tile) (lst: tile list) =
     |h::t -> loop (h::acc) tile t
     |[] -> raise (Not_found)
   in loop [] tile lst  
+
+
 
 (** [make_tile_bag char_lst acc] returns the list of tiles corresponding to a
     list of chars*)
@@ -91,27 +94,28 @@ let rec from_bag_to_inv (bag: tile list) (inv: tile list) =
     from_bag_to_inv new_tile_bag new_inv
 
 
-let init_state (num_players: int) : t =
+let init_state (num_players: int) (num_bots:int): t =
   if (num_players<2 || num_players>4) then raise InvalidNumPlayers else 
-    let rec create_players (num:int) (acc:player list) (bag: tile list) = 
+    let rec create_players (num:int) (num_bot:int) (acc:player list) (bag: tile list) = 
       if num=0 then (bag,acc) else 
         let new_data = from_bag_to_inv bag [] in 
         let new_bag = fst new_data in 
         let new_inv = snd new_data in 
-        let new_player: player = 
-          {player_id=num; score=0; inv=new_inv; bot = true} 
-            create_players (num-1) (new_player::acc) new_bag  in 
-        let data = create_players num_players [] (make_tile_bag init_tile_bag []) in 
-        let bag = fst data in 
-        let players = snd data in
-        let new_curr_turn = {curr_player=(List.hd players); new_squares=[]} in 
-        {
-          players = players;
-          board = new_board 15;
-          curr_turn = new_curr_turn;
-          tile_bag = bag;
-          cursor = make_pos 8 8;
-        }
+        let new_player: player = (if num_bot <= 0 then 
+                                    {player_id=num; score=0; inv=new_inv; bot = false} else 
+                                    {player_id=num; score=0; inv=new_inv; bot = true}) in
+        create_players (num-1) (num_bot-1)(new_player::acc) new_bag  in 
+    let data = create_players num_players num_bots [] (make_tile_bag init_tile_bag []) in 
+    let bag = fst data in 
+    let players = snd data in
+    let new_curr_turn = {curr_player=(List.hd players); new_squares=[]} in 
+    {
+      players = players;
+      board = new_board 15;
+      curr_turn = new_curr_turn;
+      tile_bag = bag;
+      cursor = make_pos 8 8;
+    }
 
 (** [is_in_inv t curr_turn] returns whether tile is in the current player's 
     inventory*)
@@ -239,10 +243,14 @@ let rec next_player curr_id players =
   try get_player_from_id next_id players with
   |Not_found -> get_player_from_id 1 players
 
-(** prints a list*)
-let rec print_tile_list = function 
-    [] -> ()
-  | e::l -> print_tile e ; print_string " " ; print_tile_list l
+let skip_curr_turn state = 
+  let curr_player = state.curr_turn.curr_player in
+  if state.curr_turn.new_squares<>[] then raise CannotSkip else
+    let id = curr_player.player_id in 
+    let next = next_player id state.players in
+    let new_curr_turn = {state.curr_turn with curr_player=next} in 
+    {state with curr_turn=new_curr_turn}
+
 
 let end_turn state =
   let curr_board = state.curr_turn.new_squares in 
@@ -305,6 +313,12 @@ let add_curr_turn st bsq =
 let print_board_from_state st = Board.print_board 
     (merge_boards st.curr_turn.new_squares st.board) st.cursor
 
+(** prints a list*)
+let rec print_tile_list = function 
+    [] -> ()
+  | e::l -> print_tile e ; print_string " " ; print_tile_list l
+
+
 let print_inventory st = print_tile_list st.curr_turn.curr_player.inv
 
 let get_curr_player_id st = st.curr_turn.curr_player.player_id
@@ -320,28 +334,6 @@ let rec word_list_to_string word_lst =
   |[] -> ""
   |h::[] -> h
   |h::t -> h ^ ", " ^ (word_list_to_string t)
-
-(** [all_word_states state] returns a list of all of the possible states given 
-    a start state*)
-let all_word_states (state:t) = 
-  let pos_list = get_board_positions state.board in 
-  let col_num = get_col_num state.board in 
-  let row_num = get_row_num state.board in 
-  let rec loop pos_list acc bad_start= 
-    match pos_list with 
-    |[] -> acc
-    |h::t -> let x = get_x_pos h in 
-      let y = get_y_pos h in 
-      print_string ("x: " ^ (string_of_int x) ^ ", y:" ^ (string_of_int y)); print_newline();
-      let row_data = try_letter_row x y col_num state bad_start in 
-      let row_words = fst row_data in 
-      let bad_start = (snd row_data) @ bad_start in 
-      print_endline ("//////////////////////////////" ^ (string_of_int x) ^ ", y:" ^ (string_of_int y));
-      let col_data = try_letter_col x y row_num state bad_start in 
-      let col_words = fst col_data in
-      let bad_start = (snd col_data @ bad_start) in
-      loop t ((row_words @ col_words) @ acc) bad_start
-  in loop pos_list [state] []
 
 let rec place_word_right word pos state : t option= 
   match word with 
@@ -406,3 +398,6 @@ let perfect_turn init_state =
         merged) connected_states in 
   best_state valid_states init_state
 
+let is_player_bot player_id state= 
+  let player = get_player_from_id player_id state.players in 
+  player.bot
