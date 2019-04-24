@@ -54,6 +54,12 @@ val remove_tile : Board.position -> t -> t
     Raises: *)
 val end_turn : t -> t
 
+(** [get_cursor_xpos st] returns the x position of the cursor in state [st] *)
+val get_cursor_xpos : t -> int
+
+(** [get_cursor_ypos st] returns the y position of the cursor in state [st] *)
+val get_cursor_ypos : t -> int
+
 (** [get_scores] returns a tuple containing the score for each player 
     in the game in the form 
     [[(player1, player1's score); (player2, player2's score); ...]] . *)

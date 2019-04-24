@@ -7,8 +7,6 @@ type command =
   | Endturn
   | Score
   | Help
-  | Board
-  | Integer of int
   | Perfect 
 
 exception Empty
@@ -20,19 +18,21 @@ let rec clean_str (lst:string list) : (string list) =
   | h::t -> if String.equal h "" then clean_str t
     else h::clean_str t
 
-let parse str : command =
+let parse (str:string) (st:State.t) : command =
   let cmd = (clean_str (String.split_on_char ' ' (String.trim str))) in
   if List.length cmd = 0 then raise Empty else 
     match cmd with 
     | "quit"::t -> Quit
-    | "place"::c::row::col::[] 
-      -> Place ((Board.make_tile (String.get c 0) ), 
-                (Board.make_pos (int_of_string row) (int_of_string col)))
-    | "remove"::row::col::[] -> Remove (Board.make_pos (int_of_string row) (int_of_string col))
+    | "remove"::[] -> 
+      let x = State.get_cursor_xpos st in 
+      let y = State.get_cursor_ypos st in 
+      Remove (Board.make_pos x y)
     | "endturn"::t -> Endturn
     | "score"::t -> Score
     | "help"::t -> Help
-    | "board"::t -> Board
     | "perfect"::t -> Perfect
-    | h::t -> (try (let i = (int_of_string h) in (Integer i)) with | _ -> raise Malformed)
+    | c::[] -> 
+      let x = State.get_cursor_xpos st in 
+      let y = State.get_cursor_ypos st in 
+      Place ((Board.make_tile (String.get c 0) ),(Board.make_pos x y))
     | _ -> raise Malformed

@@ -27,6 +27,13 @@ exception NotInInv
 exception InvalidNumPlayers
 exception InvalidPlayerID
 
+
+(** [get_cursor_xpos st] returns the x position of the cursor in state [st] *)
+let get_cursor_xpos (st:t) = Board.get_x_pos st.cursor
+
+(** [get_cursor_ypos st] returns the y position of the cursor in state [st] *)
+let get_cursor_ypos (st:t) = Board.get_y_pos st.cursor
+
 (** [remove_from_tile_list tile lst] returns the tile list [lst] without the 
     first occurence of [tile]. Raises Not_found if tile is not in the tile 
     list *)

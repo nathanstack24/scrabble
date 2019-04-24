@@ -37,7 +37,7 @@ let parse_text (l: string list) =
 let rec add_words_to_dict (words: string list) = 
   match words with 
   | [] -> ()
-  | h::t -> Hashtbl.add dict h (); 
+  | h::t -> Hashtbl.add dict h h; 
     add_words_to_dict t 
 
 

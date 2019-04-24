@@ -3,7 +3,6 @@ open Board
 open State
 
 
-
 (** [print_word_list word_lst] returns the string of  all the words in a 
     [word_lst], separated by commas*)
 let rec word_list_to_string word_lst = 
@@ -25,7 +24,7 @@ let rec get_next_command (player_id:int) (st:State.t) =
   match read_line () with
   | exception End_of_file -> exit 1
   | text -> 
-    try Command.parse text with
+    try Command.parse text st with
     | Board.InvalidChar -> print_endline ("Bad command. You can only place" ^ 
                                           "letters that are currently in your" ^
                                           "inventory. Try again.");
@@ -57,50 +56,49 @@ let rec execute_command (st:State.t) : State.t =
   let player_id = get_curr_player_id st in 
   match get_next_command player_id st with 
   | (Command.Quit) -> exit 0
-  | (Command.Place (c,pos)) -> 
-    (try (let new_st = State.place_tile c pos st in
-          erase_above ();
-          State.print_board_from_state new_st; 
-          print_newline(); execute_command new_st)
-     with 
-     | State.MisplacedTile -> 
-       print_newline();
-       ANSITerminal.print_string [ANSITerminal.red] 
-         "The tile was misplaced. All tiles must be placed in a line. Try again";
-       flush stdout;
-       Unix.sleep 1;
-       erase_above ();
-       print_newline(); State.print_board_from_state st; 
-       print_newline(); execute_command st
-     | State.NotInInv ->
-       ANSITerminal.print_string [ANSITerminal.red] 
-         "That letter is not in your inventory. Try again.";
-       print_newline();
-       flush stdout;
-       Unix.sleep 1;
-       erase_above ();
-       State.print_board_from_state st; 
-       print_newline(); execute_command st;
-     | Board.InvalidPos pos -> 
-       ANSITerminal.print_string [ANSITerminal.red]
-         ("(" ^ (string_of_int (get_x_pos pos)) ^ ", " ^
-          (string_of_int (get_y_pos pos)) ^ ") is not"^
-          "a valid position. Try again.");
-       print_newline();
-       flush stdout;
-       Unix.sleep 1;
-       erase_above ();
-       State.print_board_from_state st; 
-       print_newline(); execute_command st;
+  | (Command.Place (c,pos)) -> (try (let new_st = State.place_tile c pos st in
+                                     erase_above ();
+                                     State.print_board_from_state new_st; 
+                                     print_newline(); execute_command new_st)
+                                with 
+                                | State.MisplacedTile -> 
+                                  print_newline();
+                                  ANSITerminal.print_string [ANSITerminal.red] 
+                                    "The tile was misplaced, try again";
+                                  flush stdout;
+                                  Unix.sleep 1;
+                                  erase_above ();
+                                  print_newline(); State.print_board_from_state st; 
+                                  print_newline(); execute_command st
+                                | State.NotInInv ->
+                                  ANSITerminal.print_string [ANSITerminal.red] 
+                                    "That letter is not in your inventory. Try again.";
+                                  print_newline();
+                                  flush stdout;
+                                  Unix.sleep 1;
+                                  erase_above ();
+                                  State.print_board_from_state st; 
+                                  print_newline(); execute_command st;
+                                | Board.InvalidPos pos -> 
+                                  ANSITerminal.print_string [ANSITerminal.red]
+                                    ("(" ^ (string_of_int (get_x_pos pos)) ^ ", " ^
+                                     (string_of_int (get_y_pos pos)) ^ ") is not"^
+                                     "a valid position. Try again.");
+                                  print_newline();
+                                  flush stdout;
+                                  Unix.sleep 1;
+                                  erase_above ();
+                                  State.print_board_from_state st; 
+                                  print_newline(); execute_command st;
 
-     | State.Occupied -> 
-       ANSITerminal.print_string [ANSITerminal.red] 
-         "That board square is already occupied. Try again.";
-       flush stdout;
-       Unix.sleep 1;
-       erase_above ();
-       State.print_board_from_state st; 
-       print_newline(); execute_command st;)
+                                | State.Occupied -> 
+                                  ANSITerminal.print_string [ANSITerminal.red] 
+                                    "That board square is already occupied. Try again.";
+                                  flush stdout;
+                                  Unix.sleep 1;
+                                  erase_above ();
+                                  State.print_board_from_state st; 
+                                  print_newline(); execute_command st;)
 
 
   | (Command.Remove mybsquare) -> 
@@ -137,8 +135,6 @@ You made the following word(s): " ^ (word_list_to_string new_words) ^ "\n" ^
        print_newline(); ANSITerminal.(print_string [red]
                                         ("Some words on the board are not "^
                                          "valid. Try again. \n"));
-       flush stdout;
-       Unix.sleep 2;
        erase_above ();
        State.print_board_from_state st; 
        print_newline(); execute_command st
@@ -148,8 +144,6 @@ You made the following word(s): " ^ (word_list_to_string new_words) ^ "\n" ^
        ANSITerminal.(print_string [red]
                        ("Some tiles on the board are not connected to the " ^ 
                         "center tile. Try again \n")); 
-       flush stdout;
-       Unix.sleep 2;
        erase_above ();
        State.print_board_from_state st; 
        print_newline(); execute_command st
@@ -159,8 +153,6 @@ You made the following word(s): " ^ (word_list_to_string new_words) ^ "\n" ^
        ANSITerminal.(print_string [red]
                        ("Words placed must be at least 2 letters long. " ^ 
                         "Try again \n")); 
-       flush stdout;
-       Unix.sleep 2;
        erase_above ();
        State.print_board_from_state st; 
        print_newline(); execute_command st
@@ -173,7 +165,6 @@ You made the following word(s): " ^ (word_list_to_string new_words) ^ "\n" ^
        exit 0)
 
   | (Command.Score) -> 
-    print_newline();
     State.print_scores st;
     flush stdout;
     Unix.sleepf 1.5; 
@@ -199,22 +190,22 @@ You made the following word(s): " ^ (word_list_to_string new_words) ^ "\n" ^
   |Command.Perfect -> let new_st = State.perfect_turn st in 
     print_newline(); State.print_board_from_state new_st;
     print_newline(); execute_command (new_st)
-  |_ -> print_endline  "Bad command. Enter 'help' for a list of valid commands"; 
-    flush stdout;
-    Unix.sleep 1;
-    erase_above ();
-    State.print_board_from_state st; 
-    print_newline();
-    execute_command st
-let initial_commands = 0
+
+
+let parse_num_players (str: string) = 
+  let cmd = (clean_str (String.split_on_char ' ' (String.trim str))) in
+  if List.length cmd = 0 then raise Empty else 
+    match cmd with 
+    | n::[] -> (try (let i = (int_of_string n) in (i)) with | _ -> raise Malformed)
+    | _ -> raise Malformed
 
 (** [get_integer low upper] prompts the user to input an integer which is only
     returned if it is between [low] and [upper] (non-inclusive)*)
 let rec get_integer low upper = match read_line () with
   | exception End_of_file -> exit 1
   | txt -> try 
-      (match Command.parse txt with
-       |Command.Integer int when int < upper && int > low-> int 
+      (match parse_num_players txt with
+       |num when num < upper && num > low -> num
        |_ -> print_endline "You must enter an integer between 1 and 4"; 
          get_integer low upper)
     with 
@@ -245,7 +236,6 @@ let main () =
                    \n");
      flush stdout;
      Unix.sleepf 1.5;
-
      ANSITerminal.(print_string [black] " 
      ███████╗ ██████╗██████╗  █████╗ ██████╗ ██████╗ ██╗     ███████╗
      ██╔════╝██╔════╝██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║     ██╔════╝

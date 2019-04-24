@@ -6,8 +6,6 @@ type command =
   | Endturn
   | Score
   | Help
-  | Board
-  | Integer of int
   | Perfect
 
 (** The exception raised when a command is malformed*)
@@ -20,6 +18,6 @@ exception Empty
     string list [strs]. *)
 val clean_str : string list -> string list
 
-(** [parse str] performs the appropriate command based on the user-inputed
+(** [parse state str] performs the appropriate command based on the user-inputed
     string [str]. If the user inputs nothing, no command is executed.  *)
-val parse : string -> command
+val parse : string -> State.t -> command

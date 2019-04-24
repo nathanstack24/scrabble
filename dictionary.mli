@@ -9,9 +9,9 @@
 module Values: Map.S with type key = char
 
 (** [dict_hash_table] is a hash table containing all words in the official
-  * Scrabble dictionary. The keys in the hashtable are strings which map to
-  * unit values. *)
-val dict: (string,unit) Hashtbl.t
+  * Scrabble dictionary. The keys in the hashtable are strings which correspond
+  * to words in the Scrabble dictionary, each of which maps to itself. *)
+val dict: (string,string) Hashtbl.t
 
 (** [tile_values] is a mapping from all characters in the alphabet to the number
   * of points that particular character is worth in Scrabble. *)
