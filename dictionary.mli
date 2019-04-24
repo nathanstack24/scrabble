@@ -20,5 +20,5 @@ val tile_values: int Values.t
 (** [init_tile_bag] is the initial tile bag used in a game of scrabble *)
 val init_tile_bag: char list
 
-
+val filter_func: char list -> string -> bool
 

@@ -113,8 +113,19 @@ let init_tile_bag =
   let acc = (add_tile_num_times 'Q' 1 []) @ acc in
   (add_tile_num_times 'Z' 1 []) @ acc
 
+(**Removes the first occurence of [c], returns the list with that occurence 
+   removed*)
+let rec remove_occ c = function
+  | h::t -> if h = c then t else h::(remove_occ c t)
+  |[] -> []
 
+let rec filter_func_helper clist = function
+  | h::t -> if (List.mem h clist) then 
+      filter_func_helper (remove_occ h clist) t else false
+  | [] -> true
 
-
-
-
+(**Will filter return [false] if string [s] cannot be made 
+   up of chars in [clist]*)
+let filter_func clist (s) = 
+  let wordclist = List.init (String.length s) (String.get s) in
+  filter_func_helper clist wordclist

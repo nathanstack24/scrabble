@@ -418,3 +418,8 @@ let perfect_turn init_state =
       else loop max_score_state t init_state max_score
   in loop init_state all_connected init_state 0
 
+let perfect_turn2 (s:t) = 
+  let possible_words = Board.possible_words_dict 
+      (s.curr_turn.curr_player.inv) s.board in possible_words
+(*get_board_positions is USEFUl *)
+(*try_letter_col & row iterates through respective thing*)
