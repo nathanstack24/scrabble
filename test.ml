@@ -27,6 +27,7 @@ let square21emp = make_board_square None 2 1
 let square22emp = make_board_square None 2 2
 let pos11 = make_pos 1 1
 let pos12 = make_pos 1 2
+let pos13 = make_pos 1 3
 let pos21 = make_pos 2 1
 let pos22 = make_pos 2 2
 let pos33 = make_pos 3 3
@@ -58,6 +59,11 @@ let boardvertca = set_square a pos32 board5x5c
 let boardvertcab = set_square b pos31 board5x5c
 let board5x5cabb = set_square b pos42 board5x5cab
 let board5x5cabbe = set_square e pos52 board5x5cabb
+
+let rec make_pos_list x y n= 
+  if y = 0 then []
+  else if x = 0 then  make_pos_list n (y-1) n
+  else (make_pos x y) :: (make_pos_list (x-1) y n)
 
 let make_get_pos_tests  
     (name : string) 
@@ -181,6 +187,22 @@ let board_tests = [
     ["AB"; "BE"; "BE"];
 
   make_possible_words_tests "possible words 1" board5x5 [a;b] ["AB"; "BA"];
+  make_possible_words_tests "possible words 2" board5x5 [c;a;b] 
+    ["AB"; "BA"; "CAB";"BAC"];
+  make_possible_words_tests "possible words 3" board5x5c [a;b] 
+    ["AB"; "BA"; "CAB"; "BAC"];
+  make_possible_words_tests "possible words 4" board5x5cab [a;b] 
+    ["AB"; "BA"; "CAB";"BAC";"ABA"; "ABAC"; "ABB";"ABBA";"AA";
+     "BABA";"CABA";"CAA";"BAA"];
+
+  "col_num 5" >:: (fun _ -> assert_equal 5 (get_col_num board5x5c));
+  "col_num 2" >:: (fun _ -> assert_equal 2 (get_col_num board2x2));
+  "row_num 5" >:: (fun _ -> assert_equal 5 (get_row_num board5x5c));
+  "row_num 2" >:: (fun _ -> assert_equal 2 (get_row_num board2x2));
+
+  "pos_list" >:: (fun _ -> assert_equal true 
+                     (cmp_unordered_lists (make_pos_list 5 5 5) 
+                        (get_board_positions board5x5)))
 ]
 
 (* state test cases*)

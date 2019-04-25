@@ -531,16 +531,18 @@ let make_tile (c:char) : tile =
   let range = 65 -- 90 in 
   if (List.mem code range) then c else raise InvalidChar
 
-let rec get_word_score (word_mul: (tile*string) list ) (n:int) : int = 
-  if n = 0 then 0 else 
+let rec get_word_score (word_mul: (tile*string) list ) (n:int) (acc:int*int) : int = 
+  if n = 0 then (fst acc * snd acc) else 
     let curr_char = fst (List.nth word_mul (n-1)) in
     let char_score = Values.find curr_char tile_values in
-    let mul = snd (List.nth word_mul (n-1)) in 
-    if mul = "dl" then (2*char_score) + get_word_score word_mul (n-1)
-    else if mul = "dw" then  2*(char_score + get_word_score word_mul (n-1))
-    else if mul = "tl" then (3*char_score) + get_word_score word_mul (n-1)
-    else if mul = "tw" then 3*(char_score + get_word_score word_mul (n-1))
-    else char_score + get_word_score word_mul (n-1)
+    let char_mul = snd (List.nth word_mul (n-1)) in
+    let word_acc = fst acc in 
+    let tot_mul = snd acc in 
+    if  char_mul = "dl" then get_word_score word_mul (n-1) ( (2*char_score + word_acc), tot_mul ) 
+    else if char_mul = "dw" then get_word_score word_mul (n-1) ((char_score+word_acc), tot_mul*2) 
+    else if char_mul = "tl" then get_word_score word_mul (n-1) (3*char_score + word_acc,  tot_mul) 
+    else if char_mul = "tw" then get_word_score word_mul (n-1) ((char_score + word_acc), tot_mul * 3) 
+    else get_word_score word_mul (n-1) (char_score + word_acc, tot_mul) 
 
 (** [remove_one_of elt lst acc] returns [lst] without one of [elt] if it is in 
     [lst]*)
@@ -564,7 +566,7 @@ let get_board_score (old_board:t) (new_board:t)=
   let new_words = get_word_difference old_words all_words in
   let rec loop words = 
     match words with 
-    |h::t -> (get_word_score h (List.length h)) + loop t
+    |h::t -> (get_word_score h (List.length h) (0,1)) + loop t
     |[] -> 0
   in loop new_words
 
@@ -612,20 +614,3 @@ let get_y_pos pos = snd pos
 let get_right_pos pos = ((fst pos + 1), snd pos)
 
 let get_down_pos pos = (fst pos, snd pos - 1)
-
-let are_all_connected_row bs_lst = 
-  let sorted = List.sort comp_squares_x bs_lst in
-  let rev_sorted = List.rev sorted in 
-  let len = List.length bs_lst in
-  let hd = List.hd sorted in
-  let tl = List.hd rev_sorted in 
-  (get_x tl) - (get_x hd) = (len - 1)
-
-let are_all_connected_col bs_lst = 
-  let sorted = List.sort comp_squares_y bs_lst in
-  let rev_sorted = List.rev sorted in 
-  let len = List.length bs_lst in
-  let hd = List.hd sorted in
-  let tl = List.hd rev_sorted in 
-  (get_y hd) - (get_y tl) = (len - 1)
-

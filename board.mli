@@ -134,12 +134,3 @@ val get_right_pos : position -> position
 
 (** [get_down_pos pos] returns the position of the neighboring tile below*)
 val get_down_pos : position -> position
-
-(** [are_all_connected_col bs_lst] returns true if all the board_squares in
-    the list are in the same column and adjacent, requires that they are
-    all in the same column*)
-val are_all_connected_col : board_square list -> bool
-
-(** [are_all_connected_row bs_lst] returns true if all the board_squares in
-    the list are adjacent, requires that they are all in the same row*)
-val are_all_connected_row : board_square list -> bool
