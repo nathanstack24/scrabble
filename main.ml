@@ -32,6 +32,11 @@ let rec detect_cursor_changes = fun () ->
   | '\n' -> raise NoCursorChange
   | _ -> Invalid
 
+let rec press_any_key = fun () ->
+  set_canonical false;
+  match Pervasives.input_char stdin with
+  | _ -> erase_above(); set_canonical true
+
 let help_message = 
   "To move the cursor (denoted by yellow background and 
     blinking foreground), use the 'A','S','D', and 'W' keys, which
@@ -56,7 +61,6 @@ let help_message =
 
 
 let rec get_next_command (player_id:int) (st:State.t) = 
-
   print_endline ("Your turn, Player " ^ string_of_int (player_id)) ;
   let score = List.assoc player_id (State.get_scores st) in
   print_endline ("Your score is: " ^ (string_of_int score));
@@ -78,7 +82,7 @@ let rec get_next_command (player_id:int) (st:State.t) =
      | exception End_of_file -> exit 1
      | text -> 
        try Command.parse text st with
-       | Board.InvalidChar -> print_endline 
+       | Board.InvalidChar -> ANSITerminal.print_string [ANSITerminal.red]
                                 ("Bad command. You can only place " ^ 
                                  "letters that are currently in your " ^
                                  "inventory. Try again.");
@@ -90,7 +94,8 @@ let rec get_next_command (player_id:int) (st:State.t) =
        | Command.Empty 
        | Command.Malformed 
        | Failure _ ->
-         print_endline "Bad command. Enter 'help' for a list of valid commands";
+         ANSITerminal.print_string [ANSITerminal.red] 
+           "Bad command. Enter 'help' for a list of valid commands";
          flush stdout;
          Unix.sleep 1;
          erase_above ();
@@ -106,12 +111,11 @@ let rec execute_command (st:State.t) : State.t =
                    " (Bot) is thinking") ;
     let new_st = State.end_turn (State.perfect_turn st) in
     let new_words = State.get_state_word_diff st new_st in
-    let points = State.get_state_score_diff st new_st in
+    let points = State.get_state_score_diff st new_st player_id in
     erase_above();
     State.print_board_from_state new_st; 
     print_newline(); 
-
-    let new_score = get_score new_st player_id in 
+    let new_score = get_score_for_player new_st player_id in 
     ANSITerminal.(print_string [green] 
                     ("Player " ^ string_of_int (player_id) 
                      ^ " made the following word(s): " ^ 
@@ -170,8 +174,6 @@ let rec execute_command (st:State.t) : State.t =
          erase_above ();
          State.print_board_from_state st; 
          print_newline(); execute_command st;)
-
-
     | (Command.Remove mybsquare) -> 
       (try let new_st = (State.remove_tile mybsquare st) in 
          erase_above(); State.print_board_from_state new_st; print_newline();
@@ -186,12 +188,12 @@ let rec execute_command (st:State.t) : State.t =
     | (Command.Endturn) -> 
       (try let new_st = State.end_turn st in 
          let new_words = State.get_state_word_diff st new_st in
-         let points = State.get_state_score_diff st new_st in
+         let player = State.get_curr_player_id st in 
+         let points = State.get_state_score_diff st new_st player in
+         let new_score = get_score_for_player new_st player in 
          erase_above();
          State.print_board_from_state new_st; 
          print_newline(); 
-         let player = get_curr_player_id st in 
-         let new_score = get_score new_st player in 
          ANSITerminal.(print_string [green] 
                          ("Great turn!
 You made the following word(s): " 
@@ -274,6 +276,17 @@ You made the following word(s): "
          State.print_board_from_state st; 
          print_newline(); execute_command st)
 
+    (*| Command.Legend -> print_string "legend"; flush stdout; Unix.sleep 2;
+      erase_above ();
+      State.print_board_from_state st; 
+      print_newline(); execute_command st
+
+      | Command.PointValues -> print_string "point values"; flush stdout; 
+      Unix.sleep 2; 
+      erase_above ();
+      State.print_board_from_state st; 
+      print_newline(); execute_command st*)
+
     |Command.Perfect -> let new_st = State.perfect_turn st in 
       print_newline(); State.print_board_from_state new_st;
       print_newline(); execute_command (new_st))
@@ -288,24 +301,37 @@ let parse_num_players (str: string) =
       (try (let i = (int_of_string n) in (i)) with | _ -> raise Malformed)
     | _ -> raise Malformed
 
-(** [get_integer low upper] prompts the user to input an integer which is only
-    returned if it is between [low] and [upper] (non-inclusive)*)
-let rec get_integer low upper = match read_line () with
+(** [get_integer low upper] prints string [str] and then prompts the user to 
+    input an integer which is only returned if it is between [low] and [upper] 
+    (non-inclusive). If the user types an invalid character, reset the cursor
+    to position [cursor].  *)
+let rec get_integer low upper str cursor = 
+  ANSITerminal.(print_string [blue] str );
+  match read_line () with
   | exception End_of_file -> exit 1
   | txt -> try 
       (match parse_num_players txt with
        |num when num < upper && num > low -> num
-       |_ -> ANSITerminal.print_string [ANSITerminal.red] 
-               ("You must enter an integer between 1 and 4. Try again"); 
-         get_integer low upper)
+       |_ -> 
+         ANSITerminal.print_string [ANSITerminal.red] 
+           ("You must enter an integer between 1 and 4. Try again \n");
+         flush stdout;
+         Unix.sleep 1;
+         ANSITerminal.erase Above;
+         ANSITerminal.set_cursor (fst cursor) (snd cursor);
+         get_integer low upper str cursor)
     with 
-    | _ -> ANSITerminal.print_string [ANSITerminal.red] 
-             ("You must enter an integer between 1 and 4. Try again"); 
-      get_integer low upper
+    | _ -> 
+      ANSITerminal.print_string [ANSITerminal.red] 
+        ("You must enter an integer between 1 and 4. Try again \n");
+      flush stdout;
+      Unix.sleep 1;
+      get_integer low upper str cursor
+
 
 let main () =
   ANSITerminal.erase Above;
-  ANSITerminal.set_cursor 1 1;
+  ANSITerminal.set_cursor 1 1; 
   ANSITerminal.(print_string [black;Blink]
                   "
      ██╗    ██╗███████╗██╗      ██████╗ ██████╗ ███╗   ███╗███████╗
@@ -316,18 +342,16 @@ let main () =
       ╚══╝╚══╝ ╚══════╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝ 
      \n");
   flush stdout;
-  Unix.sleepf 1.5;
-  ANSITerminal.(print_string [red] "
-     ████████╗ ██████╗ 
-     ╚═██╔══╝██╔═══██╗
-       ██║   ██║   ██║
-       ██║   ██║   ██║
-       ██║   ╚██████╔╝
-       ╚═╝    ╚═════╝ 
+  ANSITerminal.(print_string [red;Blink] "
+                         ████████╗ ██████╗ 
+                          ╚═██╔══╝██╔═══██╗
+                            ██║   ██║   ██║
+                            ██║   ██║   ██║
+                            ██║   ╚██████╔╝
+                            ╚═╝    ╚═════╝ 
      \n");
   flush stdout;
-  Unix.sleepf 1.5;
-  ANSITerminal.(print_string [black] " 
+  ANSITerminal.(print_string [black;Blink] " 
      ███████╗ ██████╗██████╗  █████╗ ██████╗ ██████╗ ██╗     ███████╗
      ██╔════╝██╔════╝██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║     ██╔════╝
      ███████╗██║     ██████╔╝███████║██████╔╝██████╔╝██║     █████╗  
@@ -337,17 +361,18 @@ let main () =
                                                                                                                                              \n");
   flush stdout;
   Unix.sleepf 1.5;
-  ANSITerminal.erase Above;
-  ANSITerminal.set_cursor 1 1;
-  Unix.sleepf 1.5;
-
-  ANSITerminal.(print_string [blue] 
-                  ("\n\nEnter total number of players (1-4): ") );
-  let player_num = get_integer 0 5 in
-  ANSITerminal.(print_string [blue] ("\n\nOf these, how many bots? (0-"
-                                     ^string_of_int (player_num-1)^ "): ") );
-  let npc_num = if player_num > 1 then get_integer (-1) player_num else 0 in
-  Pervasives.flush stdout;
+  ANSITerminal.print_string [ANSITerminal.red] "\n Press any key to continue ";
+  flush stdout;
+  press_any_key ();
+  erase_above();
+  ANSITerminal.set_cursor 1 2;
+  let player_num_string = "\n\nEnter total number of players (2-4): " in 
+  let player_num = get_integer 1 5 player_num_string (1,2)  in
+  let cursor = ANSITerminal.pos_cursor() in 
+  let bot_num_string = "\n\nOf these, how many bots? (0-"
+                       ^string_of_int (player_num-1)^ "): " in 
+  let npc_num = if player_num > 1 then 
+      get_integer (-1) player_num bot_num_string cursor else 0 in
   erase_above ();
   ANSITerminal.(print_string [blue] ("\nThe game has "^ 
                                      (string_of_int (player_num - npc_num)) ^ 
@@ -355,12 +380,12 @@ let main () =
                                      (string_of_int (npc_num)) ^ 
                                      " bot(s) 
     For a turn to be valid, all words placed must be in the Scrabble dictionary
-and all tiles must be connected to the center (8,8) \n\n") );
-  Pervasives.flush stdout;
-  Unix.sleepf 2.0;
+    and all tiles must be connected to the center (8,8) \n\n") );
+
   ANSITerminal.(print_string [green] help_message);
-  Pervasives.flush stdout;
-  Unix.sleepf 8.0; 
+  ANSITerminal.print_string [ANSITerminal.red] "\n Press any key to continue ";
+  flush stdout;
+  press_any_key();
   erase_above ();
 
   State.print_board_from_state (State.init_state (player_num) npc_num); 

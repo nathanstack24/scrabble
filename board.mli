@@ -71,6 +71,11 @@ val is_valid_board : t -> bool
 (** [new_board len] Return an empty board of size [len]x[len]*)
 val new_board : int -> t
 
+(** [remove_tiles_from_premiums lst] removes all tiles in [lst] from the 
+  * list of premium tiles. Doing so accounts for the fact that premium tiles
+  * can only be used once.  *)
+val remove_tiles_from_premiums : board_square list -> unit
+
 (** [make_board_square c x y] returns a [board_square] at position [(x,y)] 
   * occupied by [c] *)
 val make_board_square : char option -> int -> int -> board_square

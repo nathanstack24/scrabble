@@ -88,7 +88,7 @@ val get_scores : t -> (int*int) list
 
 (** [get_score st player_id] returns the score for player with player id 
   * [player_id] in [st]. *)
-val get_score : t -> int -> int
+val get_score_for_player : t -> int -> int
 
 (** [print_inventory state] prints the current player's inventory *)
 val print_inventory : t -> unit
@@ -112,16 +112,15 @@ val print_winner: t -> unit
     [old_state] *)
 val get_state_word_diff : t -> t -> string list
 
-(** [get_state_score_diff old_state new_state] returns the new score gained
-    from the newly formed words in [new_state] by substracting the sum of the
-    scores in [new_state] from the sum of the scores in [old_state] *)
-val get_state_score_diff : t -> t -> int
+(** [get_state_score_diff old_state new_state player] returns the new score 
+    gained by [player] from the newly formed words in [new_state] by 
+    substracting [player]'s score in [new_state] from their score in 
+    [new_state] *)
+val get_state_score_diff : t -> t -> int -> int
 
 (** [new_state_with_cursor_change st change] returns a new state with updated
   * cursor position based on the cursor change indicated by [change]. *)
 val new_state_with_cursor_change : t -> cursor_change -> t 
-
-val perfect_turn : t -> t
 
 (*Use stuff from perfect_turn to find best state from state list*)
 val best_state: t list -> t -> t

@@ -18,47 +18,74 @@ exception BadWord
 exception OneLetter
 exception InvalidChar
 
-(**Positions with premium bonuses when words are played on them. *)
-type premiums = { dl: position list; tl: position list; 
-                  dw: position list; tw: position list; }
 
-let premiums = 
-  { dl = [(1,4);(1,12);(3,7);(3,9);(4,1);(4,8);(4,15);(7,3);
-          (7,7);(7,9);(7,13);(8,4); (8,12); (9,3);(9,7);(9,9);
-          (9,13);(12,1);(12,8);(12,15);(13,7);(13,9);(15,4);(15,12)];
-    tl = [(2,6);(2,10);(6,2);(6,6);(6,10);(6,14);(10,2);(10,6);
-          (10,10);(10,14);(14,6);(14,10);];
-    dw = [(2,2);(3,3);(4,4);(5,5);(8,8);
-          (2,14);(3,13);(4,12);(5,11);
-          (11,11);(12,12);(13,13);(14,14);
-          (11,5);(12,4);(13,3);(3,7);(14,2)];
-    tw = [(1,1);(1,15);(15,1);(15,15)]
-  }
-(* 
-(** [Premiums] is the OrderedType used to initialize the PremiumSet 
-  * used to perform operations on an maintain the *)
-module Premiums : Set.OrderedType = struct
-  type t = position
-  let compare p1 p2 = 
-    if (fst p1) = (fst p2) then 0
-    else if (fst p1) > (fst p2) then 1 else -1
-end
+(** [premiums_type] is a variant, each element of which describes the possible
+  * bonus effect that a position on the Scrabble board might have. *)
+type premium_type = 
+  | DL
+  | DW
+  | TL
+  | TW
+  | No_Premium
 
-(** [PremiumSet] is the module used to keep track of which premium tiles have 
-  * been used already, which effects score calculaiton. *)
-module PremiumSet = Set.Make(Premiums) *)
+(** [add_to_premiums premiums premium lst] adds each position in [lst]
+  * to hash table [premiums] with corresponding premium type [premium] *)
+let rec add_to_premiums (premiums: (position, premium_type) Hashtbl.t)
+    (premium:premium_type) (lst: position list) = 
+  match lst with 
+  | [] -> ()
+  | h::t -> Hashtbl.add premiums h premium; 
+    add_to_premiums premiums premium t
 
+let dl_list = [(1,4);(1,12);(3,7);(3,9);(4,1);(4,8);(4,15);(7,3);
+               (7,7);(7,9);(7,13);(8,4); (8,12); (9,3);(9,7);(9,9);
+               (9,13);(12,1);(12,8);(12,15);(13,7);(13,9);(15,4);(15,12)]
 
+let tl_list = [(2,6);(2,10);(6,2);(6,6);(6,10);(6,14);(10,2);(10,6);
+               (10,10);(10,14);(14,6);(14,10);]
 
-(** [used_premiums] keeps track of which premium tiles have been used and which 
-  * have not been used. *)
-let used_premiums = Hashtbl.create 70
+let dw_list = [(2,2);(3,3);(4,4);(5,5);(8,8); (2,14);(3,13);(4,12);(5,11);
+               (11,11);(12,12);(13,13);(14,14);(11,5);(12,4);(13,3);(3,7);(14,2)]
 
-(** [add_tile_to_used_premiums] returns unit after adding premium tile [premium]
-  * to the [used_premiums] hash table. *)
-let add_tile_to_used_premiums 
-    (premium: position) = 
-  Hashtbl.add used_premiums premium ()
+let tw_list = [(1,1);(1,15);(15,1);(15,15)]
+
+let print_tuple (tup: position) =
+  print_string ("(" ^ (string_of_int (fst tup)) ^ ", " ^ 
+                (string_of_int (snd tup)) ^ ")")
+
+let print_premium_type (p_type:premium_type) =
+  let s = 
+    match p_type with
+    | TW -> "TW"
+    | DW -> "DW"
+    | DL -> "DL"
+    | TL -> "TL"
+    | No_Premium -> "None" in 
+  print_string s
+
+(** [premiums] is a hash table where each premium tile position maps to its
+  * associated multiplier (triple letter, triple word, double letter, or 
+  * double word). *)
+let premiums : (position, premium_type) Hashtbl.t = 
+  let premiums_table = Hashtbl.create 50 in 
+  add_to_premiums premiums_table DL dl_list;
+  add_to_premiums premiums_table TL tl_list;
+  add_to_premiums premiums_table DW dw_list;
+  add_to_premiums premiums_table TW tw_list;
+  (*let print_table p p_type : unit= 
+    print_tuple p;
+    print_string " : ";
+    print_premium_type p_type;
+    print_newline () in 
+    Hashtbl.iter print_table premiums_table;
+    flush stdout;
+    Unix.sleep 10;*)
+  premiums_table
+
+let rec remove_tiles_from_premiums (b_squares: board_square list) = 
+  match b_squares with 
+  | [] -> () 
+  | h::t -> Hashtbl.remove premiums h.pos; remove_tiles_from_premiums t
 
 let get_x (square:board_square) = 
   fst square.pos
@@ -216,15 +243,16 @@ let find_word_row (first_letter_pos:position) (board:t)=
     |[] -> word 
   in loop sorted_row col_ind ""
 
-(** [was_premium_used premium] returns true if premium tile [p] has already been
-  * used, and false otherwise.  *)
-let was_premium_used (p:position) = 
-  match Hashtbl.find_opt used_premiums p with
-  | None -> false
-  | Some x -> true
+
+(** [find_premium_val p] returns the premium type associated with position [p],
+  * or No_Premium if position [p] is not associated with any bonus, or if the
+  * bonus associated with that type was already used. *)
+let find_premium_val (p:position) : premium_type =
+  try Hashtbl.find premiums p with 
+  | Not_found -> No_Premium
 
 (** [find_word_mul_row pos board] finds the horizontal word starting at [pos] of 
-    [board] and their associated multiplier*)
+    [board] and its associated multiplier  *)
 let find_word_mul_row (first_letter_pos:position) (board:t) = 
   let row_ind = snd first_letter_pos in
   let sorted_row = List.sort comp_squares_x (get_board_row row_ind board) in 
@@ -233,20 +261,17 @@ let find_word_mul_row (first_letter_pos:position) (board:t) =
     match lst with 
     |{pos = (x, _); occ = _}::t when x < c -> loop t c acc
     |{pos = p; occ = Some tile}::t -> 
-      (*if ((was_premium_used p)=false) then 
-        (
-          add_tile_to_used_premiums p;*)
-      if (List.mem p premiums.dl) then
+      let bonus = find_premium_val p in 
+      if (bonus=DL) then
         loop t c ((tile,"dl")::acc)
-      else if (List.mem p premiums.dw) then
+      else if (bonus=DW) then
         loop t c ((tile, "dw")::acc)
-      else if (List.mem p premiums.tl) then
+      else if (bonus=TL) then
         loop t c ((tile, "tl")::acc)
-      else if (List.mem p premiums.tw) then 
+      else if (bonus=TW) then 
         loop t c ((tile, "tw")::acc)
       else 
-        loop t c ((tile, "")::acc)  
-    (*else loop t c ((tile, "")::acc)*)
+        loop t c ((tile, "")::acc)
     |{pos = (x, _); occ = None}::t -> acc
     |[] -> acc 
   in loop sorted_row col_ind []
@@ -265,6 +290,7 @@ let find_word_column (first_letter_pos:position) (board:t)=
     |[] -> word 
   in loop sorted_col row_ind ""
 
+
 (** [find_word_mul_col pos board] finds the vertical word starting at [pos] of 
     [board]*)
 let find_word_mul_column (first_letter_pos:position) (board:t)= 
@@ -275,21 +301,17 @@ let find_word_mul_column (first_letter_pos:position) (board:t)=
     match lst with 
     |{pos = (_, x); occ = _}::t when x > r -> loop t r acc
     |{pos = p; occ = Some tile}::t ->    
-      (*if ((was_premium_used p)=false) then 
-        (print_string "premium wasn't previously used \n";
-         add_tile_to_used_premiums p;*)
-      if (List.mem p premiums.dl) then
+      let bonus = find_premium_val p in 
+      if (bonus=DL) then
         loop t r ((tile,"dl")::acc)
-      else if (List.mem p premiums.dw) then
+      else if (bonus=DW) then
         loop t r ((tile, "dw")::acc)
-      else if (List.mem p premiums.tl) then
+      else if (bonus=TL) then
         loop t r ((tile, "tl")::acc)
-      else if (List.mem p premiums.tw) then 
+      else if (bonus=TW) then 
         loop t r ((tile, "tw")::acc)
       else 
         loop t r ((tile, "")::acc)
-    (*else (
-      loop t r ((tile, "")::acc))*)
     |{pos = (_, x); occ = None}::t -> acc
     |[] -> acc 
   in loop sorted_col row_ind []
@@ -428,13 +450,14 @@ let bsquare_tostring bsquare =
 (*Gets the color the tile should print at.*)
 let get_bsquare_color bsquare = 
   let pos = bsquare.pos in
-  if List.mem pos premiums.dl then 
+  let bonus = find_premium_val pos in 
+  if bonus=DL then 
     [ANSITerminal.on_cyan;ANSITerminal.black;Bold]
-  else if List.mem pos premiums.tl  then 
+  else if bonus=TL  then 
     [ANSITerminal.on_blue;ANSITerminal.black;Bold]
-  else if List.mem pos premiums.dw then 
+  else if bonus=DW then 
     [ANSITerminal.on_magenta;ANSITerminal.black;Bold]
-  else if List.mem pos premiums.tw then 
+  else if bonus=TW then 
     [ANSITerminal.on_red;ANSITerminal.black;Bold]
   else [ANSITerminal.white;ANSITerminal.black]
 

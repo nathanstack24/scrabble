@@ -7,7 +7,9 @@ type command =
   | Score
   | Help
   | Skip
-  | Perfect
+  | Perfect 
+  (*| Legend
+    | PointValues*)
 
 (** The exception raised when a command is malformed*)
 exception Malformed

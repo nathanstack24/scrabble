@@ -256,20 +256,23 @@ let skip_curr_turn state =
     {state with curr_turn=new_curr_turn}
 
 let end_turn state =
-  let curr_board = state.curr_turn.new_squares in 
-  let merged_board = merge_boards curr_board state.board in 
+  let new_tiles = state.curr_turn.new_squares in 
+  let merged_board = merge_boards new_tiles state.board in 
   let curr_player = state.curr_turn.curr_player in 
   let id = curr_player.player_id in 
   let next = next_player id state.players in 
-  if is_valid_board merged_board = true then 
+  if is_valid_board merged_board = true then
     let new_data = replenish_inventory state in
     let new_players = fst new_data in 
     let new_bag = snd new_data in 
-    {players = new_players; 
-     board = merged_board;
-     curr_turn = {curr_player = next; new_squares = []};
-     tile_bag = new_bag;
-     cursor = make_pos 8 8;} 
+    let new_st = 
+      {players = new_players; 
+       board = merged_board;
+       curr_turn = {curr_player = next; new_squares = []};
+       tile_bag = new_bag;
+       cursor = make_pos 8 8;}  in 
+    Board.remove_tiles_from_premiums new_tiles;
+    new_st
   else 
     {state with 
      curr_turn = {curr_player = get_player_from_id id state.players;
@@ -282,7 +285,7 @@ let get_scores (state:t) =
     |h::t -> (h.player_id, h.score)::(loop t)
   in loop state.players
 
-let get_score (state:t) (player_id:int) = 
+let get_score_for_player (state:t) (player_id:int) = 
   let player = List.find (fun player -> player.player_id=player_id) 
       state.players in 
   player.score
@@ -329,8 +332,11 @@ let get_curr_player_id st = st.curr_turn.curr_player.player_id
 let get_state_word_diff old_state new_state = 
   get_board_word_diff old_state.board new_state.board
 
-let get_state_score_diff old_state new_state = 
-  get_board_score old_state.board new_state.board
+
+let get_state_score_diff (old_state:t) (new_state:t) (player:int) = 
+  let new_score = get_score_for_player new_state player in
+  let old_score = get_score_for_player old_state player in 
+  new_score - old_score
 
 (**Returns a comma-seperated string of words in [word_lst]*)
 let rec word_list_to_string word_lst = 
