@@ -289,27 +289,29 @@ let rec get_integer low upper = match read_line () with
   | txt -> try 
       (match parse_num_players txt with
        |num when num < upper && num > low -> num
-       |_ -> print_endline "You must enter an integer between 1 and 4"; 
+       |_ -> ANSITerminal.print_string [ANSITerminal.red] 
+               ("You must enter an integer between 1 and 4. Try again"); 
          get_integer low upper)
     with 
-    | _ -> print_endline "You must enter an integer between 1 and 4"; 
+    | _ -> ANSITerminal.print_string [ANSITerminal.red] 
+             ("You must enter an integer between 1 and 4. Try again"); 
       get_integer low upper
 
 let main () =
-  (* ANSITerminal.erase Above;
-     ANSITerminal.set_cursor 1 1;
-     ANSITerminal.(print_string [black]
+  (*ANSITerminal.erase Above;
+    ANSITerminal.set_cursor 1 1;
+    ANSITerminal.(print_string [black;Blink]
                   "
      ██╗    ██╗███████╗██╗      ██████╗ ██████╗ ███╗   ███╗███████╗
      ██║    ██║██╔════╝██║     ██╔════╝██╔═══██╗████╗ ████║██╔════╝
      ██║ █╗ ██║█████����������������  ██║     ██║     ██║   ██║██╔████╔██║█████╗  
      ██║███╗██║██╔══╝  ██║     ██║     ██║   ██║██║╚██╔╝██║██╔══╝  
-     �����███╔███╔╝████���██╗███████╗�������������██████╗╚██████╔╝██║ ��═╝ ██║███████╗
+     �����███╔███╔╝████���██╗███████╗██████╗╚██████╔╝██║ ��═╝ ██║███████╗
      ╚══╝╚══╝ ╚══════╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝ 
      \n");
-     flush stdout;
-     Unix.sleepf 1.5;
-     ANSITerminal.(print_string [red] "
+    flush stdout;
+    Unix.sleepf 1.5;
+    ANSITerminal.(print_string [red] "
      ████████╗ ██████╗ 
      ╚��═██╔══╝██╔══��██╗
      ��█║   ██║   ██║
@@ -317,9 +319,9 @@ let main () =
      ██║   ╚██████╔╝
      ╚═╝    ╚═════╝ 
      \n");
-     flush stdout;
-     Unix.sleepf 1.5;
-     ANSITerminal.(print_string [black] " 
+    flush stdout;
+    Unix.sleepf 1.5;
+    ANSITerminal.(print_string [black] " 
      ███████╗ ██████╗██████╗  █████╗ ██████╗ ██████╗ ██╗     ███████╗
      ██╔════╝██╔════╝██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║     ██╔════╝
      ███████╗██║     ██████╔╝███████║██████╔╝██████╔╝██║     █████╗  
@@ -327,12 +329,12 @@ let main () =
      ██████║╚██████╗█��║  ██��██║  ██║██████╔╝████ █╔=█  ██╗█████��█╗
                                                                                                                        ══==═╝ ╚════=╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═════╝ ╚══════╝╚══════╝
                                                                                                                                              \n");
-     flush stdout;
-     Unix.sleepf 1.5;
-     ANSITerminal.erase Above;
-     ANSITerminal.set_cursor 1 1;
-     Unix.sleepf 1.5;
-  *)
+    flush stdout;
+    Unix.sleepf 1.5;*)
+  ANSITerminal.erase Above;
+  ANSITerminal.set_cursor 1 1;
+  Unix.sleepf 1.5;
+
   ANSITerminal.(print_string [blue] ("\n\nEnter total number of players (1-4): ") );
   let player_num = get_integer 0 5 in
   ANSITerminal.(print_string [blue] ("\n\nOf these, how many bots? (0-"

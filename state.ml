@@ -178,7 +178,7 @@ let place_tile (tile:tile) (pos:position) (state:t) =
         let new_curr_turn = 
           {curr_player = {state.curr_turn.curr_player with inv= new_inv}; 
            new_squares = new_square::state.curr_turn.new_squares} in 
-        {state with curr_turn=new_curr_turn}
+        {state with curr_turn=new_curr_turn; cursor=pos}
       else state
     else raise Occupied
   else raise NotInInv

@@ -34,6 +34,30 @@ let premiums =
           (11,5);(12,4);(13,3);(3,7);(14,2)];
     tw = [(1,1);(1,15);(15,1);(15,15)]
   }
+(* 
+(** [Premiums] is the OrderedType used to initialize the PremiumSet 
+  * used to perform operations on an maintain the *)
+module Premiums : Set.OrderedType = struct
+  type t = position
+  let compare p1 p2 = 
+    if (fst p1) = (fst p2) then 0
+    else if (fst p1) > (fst p2) then 1 else -1
+end
+
+(** [PremiumSet] is the module used to keep track of which premium tiles have 
+  * been used already, which effects score calculaiton. *)
+module PremiumSet = Set.Make(Premiums) *)
+
+
+
+(** [used_premiums] keeps track of which premium tiles have been used and which 
+  * have not been used. *)
+let used_premiums = Hashtbl.create 70
+
+(** [add_tile_to_used_premiums] returns unit after adding premium tile [premium]
+  * to the [used_premiums] hash table. *)
+let add_tile_to_used_premiums (tbl:(position,position) Hashtbl.t) (premium: position) = 
+  Hashtbl.add used_premiums premium ()
 
 let get_x (square:board_square) = 
   fst square.pos
@@ -189,9 +213,16 @@ let find_word_row (first_letter_pos:position) (board:t)=
     |[] -> word 
   in loop sorted_row col_ind ""
 
+(** [was_premium_used premium] returns true if premium tile [p] has already been
+  * used, and false otherwise.  *)
+let was_premium_used (p:position) = 
+  match Hashtbl.find_opt used_premiums p with
+  | None -> true
+  | Some x -> false
+
 (** [find_word_mul_row pos board] finds the horizontal word starting at [pos] of 
     [board] and their associated multiplier*)
-let find_word_mul_row (first_letter_pos:position) (board:t)= 
+let find_word_mul_row (first_letter_pos:position) (board:t) = 
   let row_ind = snd first_letter_pos in
   let sorted_row = List.sort comp_squares_x (get_board_row row_ind board) in 
   let col_ind = fst first_letter_pos in
@@ -199,11 +230,20 @@ let find_word_mul_row (first_letter_pos:position) (board:t)=
     match lst with 
     |{pos = (x, _); occ = _}::t when x < c -> loop t c acc
     |{pos = p; occ = Some tile}::t -> 
-      if List.mem p premiums.dl then loop t c ((tile, "dl")::acc)
-      else if List.mem p premiums.dw then loop t c ((tile, "dw")::acc)
-      else if List.mem p premiums.tl then loop t c ((tile, "tl")::acc)
-      else if List.mem p premiums.tw then  loop t c ((tile, "tw")::acc)
-      else loop t c ((tile, "")::acc)
+      if ((was_premium_used p)=false) then 
+        (print_string "premium wasn't previously used \n";
+         add_tile_to_used_premiums used_premiums p;
+         if (List.mem p premiums.dl) then
+           loop t c ((tile,"dl")::acc)
+         else if (List.mem p premiums.dw) then
+           loop t c ((tile, "dw")::acc)
+         else if (List.mem p premiums.tl) then
+           loop t c ((tile, "tl")::acc)
+         else (*if (List.mem p premiums.tw) then *)
+           loop t c ((tile, "tw")::acc))
+      else (print_string "in else statement";
+            flush stdout;
+            Unix.sleep 1;loop t c ((tile, "")::acc))
     |{pos = (x, _); occ = None}::t -> acc
     |[] -> acc 
   in loop sorted_row col_ind []
@@ -232,11 +272,20 @@ let find_word_mul_column (first_letter_pos:position) (board:t)=
     match lst with 
     |{pos = (_, x); occ = _}::t when x > r -> loop t r acc
     |{pos = p; occ = Some tile}::t ->    
-      if List.mem p premiums.dl then loop t r ((tile, "dl")::acc)
-      else if List.mem p premiums.dw then loop t r ((tile, "dw")::acc)
-      else if List.mem p premiums.tl then loop t r ((tile, "tl")::acc)
-      else if List.mem p premiums.tw then  loop t r ((tile, "tw")::acc)
-      else loop t r ((tile, "")::acc)
+      if ((was_premium_used p)=false) then 
+        (print_string "premium wasn't previously used \n";
+         add_tile_to_used_premiums used_premiums p;
+         if (List.mem p premiums.dl) then
+           loop t r ((tile,"dl")::acc)
+         else if (List.mem p premiums.dw) then
+           loop t r ((tile, "dw")::acc)
+         else if (List.mem p premiums.tl) then
+           loop t r ((tile, "tl")::acc)
+         else (*if (List.mem p premiums.tw) then *)
+           loop t r ((tile, "tw")::acc))
+      else (print_string "in else statement";
+            flush stdout;
+            Unix.sleep 1;loop t r ((tile, "")::acc))
     |{pos = (_, x); occ = None}::t -> acc
     |[] -> acc 
   in loop sorted_col row_ind []
@@ -287,21 +336,6 @@ let word_mul_list_from_board_col (board:t) =
       else loop t board
   in loop first_letters board
 
-(** [word_list_from_board_row board] returns a list of all the horizontal words 
-    on [board]*)
-let word_list_from_board_row (board:t) = 
-  let first_letters = remove_dups (first_letter_squares_row board) [] in
-  let rec loop pos_list board = 
-    match pos_list with
-    |[] -> []
-    |h::t ->
-      let row_word = find_word_row h board in 
-      let row_word_len = String.length row_word in 
-      if row_word_len > 1 then 
-        row_word::loop t board
-      else loop t board
-  in loop first_letters board
-
 (** [word_mul_from_board_row board] returns a list of all the horizontal words 
     on [board] with their associated multiplier*)
 let word_mul_list_from_board_row (board:t) = 
@@ -314,6 +348,21 @@ let word_mul_list_from_board_row (board:t) =
       let row_word_len = List.length row_word_mul in 
       if row_word_len > 1 then 
         row_word_mul::(loop t board)
+      else loop t board
+  in loop first_letters board
+
+(** [word_list_from_board_row board] returns a list of all the horizontal words 
+    on [board]*)
+let word_list_from_board_row (board:t) = 
+  let first_letters = remove_dups (first_letter_squares_row board) [] in
+  let rec loop pos_list board = 
+    match pos_list with
+    |[] -> []
+    |h::t ->
+      let row_word = find_word_row h board in 
+      let row_word_len = String.length row_word in 
+      if row_word_len > 1 then 
+        row_word::loop t board
       else loop t board
   in loop first_letters board
 
@@ -393,7 +442,7 @@ let rec print_ordered_row (lst:board_square list) (cursor:position) =
     ANSITerminal.print_string ((get_bsquare_color h)@(is_cursor_pos h cursor))
       (bsquare_tostring h); 
     print_ordered_row t cursor
-  | _ -> print_endline "|" 
+  | _ -> print_endline "|"
 
 (** [print_row_num num] prints the given row number to the console. Called 
   * before printing each row of the Scrabble board. *)
@@ -476,9 +525,9 @@ let make_tile (c:char) : tile =
 let rec get_word_score (word_mul: (tile*string) list ) (n:int) : int = 
   if n = 0 then 0 else 
     let curr_char = fst (List.nth word_mul (n-1)) in
-    let char_score = Values.find curr_char tile_values in 
+    let char_score = Values.find curr_char tile_values in
     let mul = snd (List.nth word_mul (n-1)) in 
-    if mul = "dl" then  (2*char_score) + get_word_score word_mul (n-1)
+    if mul = "dl" then (2*char_score) + get_word_score word_mul (n-1)
     else if mul = "dw" then  2*(char_score + get_word_score word_mul (n-1))
     else if mul = "tl" then (3*char_score) + get_word_score word_mul (n-1)
     else if mul = "tw" then 3*(char_score + get_word_score word_mul (n-1))
