@@ -173,14 +173,14 @@ let board_tests = [
 ]
 
 (* state test cases*)
-let state_init = init_state 2
+let state_init = init_state 2 0
 let state_2 = State.end_turn state_init
 let state_3 = State.end_turn state_2
 
-let bad_state_1 = fun () -> init_state 1
-let bad_state_0 = fun () -> init_state 0
-let bad_state_5 = fun () -> init_state 5
-let bad_state_neg = fun () -> init_state (-1)
+let bad_state_1 = fun () -> init_state 1 0
+let bad_state_0 = fun () -> init_state 0 0 
+let bad_state_5 = fun () -> init_state 5 0 
+let bad_state_neg = fun () -> init_state (-1) 0
 
 let make_bad_state_init_tests
     (name : string) 

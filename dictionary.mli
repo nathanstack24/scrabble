@@ -20,5 +20,7 @@ val tile_values: int Values.t
 (** [init_tile_bag] is the initial tile bag used in a game of scrabble *)
 val init_tile_bag: char list
 
+(** [filter_func clist s] return [false] if string [s] cannot be made 
+    up of chars in [clist]**)
 val filter_func: char list -> string -> bool
 

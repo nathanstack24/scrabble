@@ -49,7 +49,7 @@ let help_message =
     Other commands:
 
     score (prints the current score of all players in the game)
-    endturn (ends the current player's turn once they have formed the desired word(s))
+    endturn (ends the current player's turn if it is valid)
     skip (skips the current player's turn)
     help (prints this message to the console)
     quit (quits the game) \n \n"
@@ -78,9 +78,10 @@ let rec get_next_command (player_id:int) (st:State.t) =
      | exception End_of_file -> exit 1
      | text -> 
        try Command.parse text st with
-       | Board.InvalidChar -> print_endline ("Bad command. You can only place " ^ 
-                                             "letters that are currently in your " ^
-                                             "inventory. Try again.");
+       | Board.InvalidChar -> print_endline 
+                                ("Bad command. You can only place " ^ 
+                                 "letters that are currently in your " ^
+                                 "inventory. Try again.");
          flush stdout;
          Unix.sleep 1;
          erase_above ();
@@ -111,9 +112,10 @@ let rec execute_command (st:State.t) : State.t =
 
     let new_score = get_score new_st player_id in 
     ANSITerminal.(print_string [green] 
-
                     ("Player " ^ string_of_int (player_id) 
-                     ^ " made the following word(s): " ^ (word_list_to_string new_words) ^ "\n" ^"Earning " ^ (string_of_int points) ^ " points \n"^
+                     ^ " made the following word(s): " ^ 
+                     (word_list_to_string new_words) ^ "\n" ^"Earning " ^ 
+                     (string_of_int points) ^ " points \n"^
                      "Player "^ (string_of_int player_id) ^ 
                      "'s score is now " ^ 
                      (string_of_int new_score)) );  
@@ -191,7 +193,8 @@ let rec execute_command (st:State.t) : State.t =
          let new_score = get_score new_st player in 
          ANSITerminal.(print_string [green] 
                          ("Great turn!
-You made the following word(s): " ^ (word_list_to_string new_words) ^ "\n" ^
+You made the following word(s): " 
+                          ^ (word_list_to_string new_words) ^ "\n" ^
                           "You earned " ^ (string_of_int points) ^ " points \n"^
                           "Player "^ (string_of_int player) ^ 
                           "'s score is now " ^ 
@@ -262,7 +265,8 @@ You made the following word(s): " ^ (word_list_to_string new_words) ^ "\n" ^
        | CannotSkip -> 
          ANSITerminal.(print_string [red]
                          ("You cannot skip your turn after placing tiles on the"
-                          ^"board. Remove all placed tiles and then try again. \n")); 
+                          ^"board. Remove all placed tiles and then try"^ 
+                          "again. \n")); 
          flush stdout;
          Unix.sleep 2;
          erase_above ();
@@ -279,7 +283,8 @@ let parse_num_players (str: string) =
   let cmd = (clean_str (String.split_on_char ' ' (String.trim str))) in
   if List.length cmd = 0 then raise Empty else 
     match cmd with 
-    | n::[] -> (try (let i = (int_of_string n) in (i)) with | _ -> raise Malformed)
+    | n::[] -> 
+      (try (let i = (int_of_string n) in (i)) with | _ -> raise Malformed)
     | _ -> raise Malformed
 
 (** [get_integer low upper] prompts the user to input an integer which is only
@@ -298,44 +303,45 @@ let rec get_integer low upper = match read_line () with
       get_integer low upper
 
 let main () =
-  (*ANSITerminal.erase Above;
-    ANSITerminal.set_cursor 1 1;
-    ANSITerminal.(print_string [black;Blink]
+  ANSITerminal.erase Above;
+  ANSITerminal.set_cursor 1 1;
+  ANSITerminal.(print_string [black;Blink]
                   "
      ██╗    ██╗███████╗██╗      ██████╗ ██████╗ ███╗   ███╗███████╗
      ██║    ██║██╔════╝██║     ██╔════╝██╔═══██╗████╗ ████║██╔════╝
-     ██║ █╗ ██║█████����������������  ██║     ██║     ██║   ██║██╔████╔██║█████╗  
+     ██║ █╗ ██║█████   ██║     ██║     ██║   ██║██╔████╔██║█████╗  
      ██║███╗██║██╔══╝  ██║     ██║     ██║   ██║██║╚██╔╝██║██╔══╝  
-     �����███╔███╔╝████���██╗███████╗██████╗╚██████╔╝██║ ��═╝ ██║███████╗
-     ╚══╝╚══╝ ╚══════╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝ 
+      ███╔███╔╝ ██████╗ ███████╗██████╗╚██████╔╝██║ ══╝ ██║███████╗
+      ╚══╝╚══╝ ╚══════╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝ 
      \n");
-    flush stdout;
-    Unix.sleepf 1.5;
-    ANSITerminal.(print_string [red] "
+  flush stdout;
+  Unix.sleepf 1.5;
+  ANSITerminal.(print_string [red] "
      ████████╗ ██████╗ 
-     ╚��═██╔══╝██╔══��██╗
-     ��█║   ██║   ██║
-     ██║   ██║   ██║
-     ██║   ╚██████╔╝
-     ╚═╝    ╚═════╝ 
+     ╚═██╔══╝██╔═══██╗
+       ██║   ██║   ██║
+       ██║   ██║   ██║
+       ██║   ╚██████╔╝
+       ╚═╝    ╚═════╝ 
      \n");
-    flush stdout;
-    Unix.sleepf 1.5;
-    ANSITerminal.(print_string [black] " 
+  flush stdout;
+  Unix.sleepf 1.5;
+  ANSITerminal.(print_string [black] " 
      ███████╗ ██████╗██████╗  █████╗ ██████╗ ██████╗ ██╗     ███████╗
      ██╔════╝██╔════╝██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║     ██╔════╝
      ███████╗██║     ██████╔╝███████║██████╔╝██████╔╝██║     █████╗  
      ╚════██║██║     ██╔══██╗██╔══██║██╔══██╗██╔══██╗██║     ██╔══╝  
-     ██████║╚██████╗█��║  ██��██║  ██║██████╔╝████ █╔=█  ██╗█████��█╗
-                                                                                                                       ══==═╝ ╚════=╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═════╝ ╚══════╝╚══════╝
+     ██████║╚██████╗ █║   ██ ██║  ██║██████╔╝██████╔=██████╗ ██████╗
+      ══==═╝ ╚════=╝╚═╝   ╚═╝╚═╝    ╚═════╝ ╚═════╝╚══════╝╚══════╝
                                                                                                                                              \n");
-    flush stdout;
-    Unix.sleepf 1.5;*)
+  flush stdout;
+  Unix.sleepf 1.5;
   ANSITerminal.erase Above;
   ANSITerminal.set_cursor 1 1;
   Unix.sleepf 1.5;
 
-  ANSITerminal.(print_string [blue] ("\n\nEnter total number of players (1-4): ") );
+  ANSITerminal.(print_string [blue] 
+                  ("\n\nEnter total number of players (1-4): ") );
   let player_num = get_integer 0 5 in
   ANSITerminal.(print_string [blue] ("\n\nOf these, how many bots? (0-"
                                      ^string_of_int (player_num-1)^ "): ") );
@@ -344,9 +350,9 @@ let main () =
   erase_above ();
   ANSITerminal.(print_string [blue] ("\nThe game has "^ 
                                      (string_of_int (player_num - npc_num)) ^ 
-                                     " human players and "^ 
+                                     " human player(s) and "^ 
                                      (string_of_int (npc_num)) ^ 
-                                     " bots 
+                                     " bot(s) 
     For a turn to be valid, all words placed must be in the Scrabble dictionary
 and all tiles must be connected to the center (8,8) \n\n") );
   Pervasives.flush stdout;

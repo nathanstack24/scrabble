@@ -116,10 +116,16 @@ val get_x_pos : position -> int
 (** [get_y_pos pos] returns the y coordinate of [pos]*)
 val get_y_pos : position -> int
 
+(** [are_connected_to_center center_pos board] returns true if there is a 
+    tile path to every tile placed on the board from the tile at [center_pos] *)
 val are_connected_to_center : position -> t -> bool
 
+(** [check_words board] returns true if all of the words placed on [board] are
+    in the English dictionary*)
 val check_words : t -> bool
 
+(**[possible_words_dict inv board] returns a new dictionary of all words that 
+   could be made with the current [inv] and [board] *)
 val possible_words_dict: tile list -> t -> string list
 
 (** [get_right_pos pos] returns the position of the neighboring tile to the 
@@ -128,3 +134,12 @@ val get_right_pos : position -> position
 
 (** [get_down_pos pos] returns the position of the neighboring tile below*)
 val get_down_pos : position -> position
+
+(** [are_all_connected_col bs_lst] returns true if all the board_squares in
+    the list are in the same column and adjacent, requires that they are
+    all in the same column*)
+val are_all_connected_col : board_square list -> bool
+
+(** [are_all_connected_row bs_lst] returns true if all the board_squares in
+    the list are adjacent, requires that they are all in the same row*)
+val are_all_connected_row : board_square list -> bool

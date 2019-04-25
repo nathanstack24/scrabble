@@ -124,8 +124,6 @@ let rec filter_func_helper clist = function
       filter_func_helper (remove_occ h clist) t else false
   | [] -> true
 
-(**Will filter return [false] if string [s] cannot be made 
-   up of chars in [clist]*)
 let filter_func clist (s) = 
   let wordclist = List.init (String.length s) (String.get s) in
   filter_func_helper clist wordclist

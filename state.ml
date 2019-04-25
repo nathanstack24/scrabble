@@ -37,7 +37,7 @@ exception InvalidNumPlayers
 exception InvalidPlayerID
 exception NoCursorChange
 exception CannotSkip
-
+exception Gap
 
 (** [get_cursor_xpos st] returns the x position of the cursor in state [st] *)
 let get_cursor_xpos (st:t) = Board.get_x_pos st.cursor
@@ -74,7 +74,8 @@ let new_state_with_cursor_change (st: t) (change:cursor_change) =
   | Right -> if x=15 then st else {st with cursor=(make_pos (x+1) y)}
   | Up -> if y=15 then st else {st with cursor=(make_pos x (y+1))}
   | Down -> if y=1 then st else {st with cursor=(make_pos x (y-1))}
-  | Invalid -> failwith "Error: tried to initialize new state with invalid cursor"
+  | Invalid -> failwith 
+                 "Error: tried to initialize new state with invalid cursor"
 
 
 (** [from_bag_to_inv bag inv] returns a tuple whose first element is a tile list
@@ -96,16 +97,19 @@ let rec from_bag_to_inv (bag: tile list) (inv: tile list) =
 
 let init_state (num_players: int) (num_bots:int): t =
   if (num_players<2 || num_players>4) then raise InvalidNumPlayers else 
-    let rec create_players (num:int) (num_bot:int) (acc:player list) (bag: tile list) = 
+    let rec create_players (num:int) (num_bot:int) (acc:player list) 
+        (bag: tile list) = 
       if num=0 then (bag,acc) else 
         let new_data = from_bag_to_inv bag [] in 
         let new_bag = fst new_data in 
         let new_inv = snd new_data in 
-        let new_player: player = (if num_bot <= 0 then 
-                                    {player_id=num; score=0; inv=new_inv; bot = false} else 
-                                    {player_id=num; score=0; inv=new_inv; bot = true}) in
+        let new_player: player = 
+          (if num_bot <= 0 then 
+             {player_id=num; score=0; inv=new_inv; bot = false} else 
+             {player_id=num; score=0; inv=new_inv; bot = true}) in
         create_players (num-1) (num_bot-1)(new_player::acc) new_bag  in 
-    let data = create_players num_players num_bots [] (make_tile_bag init_tile_bag []) in 
+    let data = create_players num_players num_bots [] 
+        (make_tile_bag init_tile_bag []) in 
     let bag = fst data in 
     let players = snd data in
     let new_curr_turn = {curr_player=(List.hd players); new_squares=[]} in 
@@ -251,7 +255,6 @@ let skip_curr_turn state =
     let new_curr_turn = {state.curr_turn with curr_player=next} in 
     {state with curr_turn=new_curr_turn}
 
-
 let end_turn state =
   let curr_board = state.curr_turn.new_squares in 
   let merged_board = merge_boards curr_board state.board in 
@@ -259,14 +262,19 @@ let end_turn state =
   let id = curr_player.player_id in 
   let next = next_player id state.players in 
   if is_valid_board merged_board = true then 
-    let new_data = replenish_inventory state in
-    let new_players = fst new_data in 
-    let new_bag = snd new_data in 
-    {players = new_players; 
-     board = merged_board;
-     curr_turn = {curr_player = next; new_squares = []};
-     tile_bag = new_bag;
-     cursor = make_pos 8 8;} 
+    if ((same_y (List.hd curr_board) state.curr_turn) && 
+        are_all_connected_row curr_board) 
+    || ((same_x (List.hd curr_board) state.curr_turn) && 
+        are_all_connected_col curr_board) then 
+      let new_data = replenish_inventory state in
+      let new_players = fst new_data in 
+      let new_bag = snd new_data in 
+      {players = new_players; 
+       board = merged_board;
+       curr_turn = {curr_player = next; new_squares = []};
+       tile_bag = new_bag;
+       cursor = make_pos 8 8;} 
+    else raise MisplacedTile
   else 
     {state with 
      curr_turn = {curr_player = get_player_from_id id state.players;
@@ -358,14 +366,16 @@ let rec place_word_down word pos state : t option=
 (*Note: function takes in a list of positions on the board. *)
 let rec find_placements_helper word (state:t) (acc:t list) = function
   | [] -> acc
-  | h::t -> match ((place_word_right word h state), (place_word_down word h state)) with 
-    | (Some s1, Some s2) -> find_placements_helper word state (s1::s2::acc) t
-    | (Some s1, None) -> find_placements_helper word state (s1::acc) t
-    | (None, Some s2) -> find_placements_helper word state (s2::acc) t
-    | (None, None) -> find_placements_helper word state acc t
+  | h::t -> match ((place_word_right word h state), 
+                   (place_word_down word h state)) with 
+  | (Some s1, Some s2) -> find_placements_helper word state (s1::s2::acc) t
+  | (Some s1, None) -> find_placements_helper word state (s1::acc) t
+  | (None, Some s2) -> find_placements_helper word state (s2::acc) t
+  | (None, None) -> find_placements_helper word state acc t
 
 let rec find_placements word (state:t) = 
-  let clist = List.rev (make_tile_bag (List.init (String.length word) (String.get word)) []) in 
+  let clist = List.rev (make_tile_bag (List.init (String.length word) 
+                                         (String.get word)) []) in 
   find_placements_helper clist state [] (get_board_positions state.board)
 
 let best_state state_lst init_state = 
@@ -391,11 +401,11 @@ let perfect_turn init_state =
   in
   let possible_states = loop possible_words [] in 
   let connected_states = List.filter (fun s -> 
-      let merged = merge_boards s.curr_turn.new_squares s.board in are_connected_to_center
-        (make_pos 8 8)  merged) possible_states in
+      let merged = merge_boards s.curr_turn.new_squares s.board in 
+      are_connected_to_center (make_pos 8 8)  merged) possible_states in
   let valid_states = List.filter (fun s -> 
-      let merged = merge_boards s.curr_turn.new_squares s.board in check_words
-        merged) connected_states in 
+      let merged = merge_boards s.curr_turn.new_squares s.board in 
+      check_words merged) connected_states in 
   best_state valid_states init_state
 
 let is_player_bot player_id state= 

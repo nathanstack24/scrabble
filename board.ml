@@ -56,7 +56,8 @@ let used_premiums = Hashtbl.create 70
 
 (** [add_tile_to_used_premiums] returns unit after adding premium tile [premium]
   * to the [used_premiums] hash table. *)
-let add_tile_to_used_premiums (tbl:(position,position) Hashtbl.t) (premium: position) = 
+let add_tile_to_used_premiums 
+    (premium: position) = 
   Hashtbl.add used_premiums premium ()
 
 let get_x (square:board_square) = 
@@ -104,12 +105,14 @@ let get_neighbors (p:position) (pos_list: position list) =
 (** [connected_to_center center_pos board] Returns a list of all of the occupied
     board_squares with a path from the center center*)
 let connected_to_center (center_pos:position) (board:t)=
-  let rec bfs (connected:position list) (visited:position list) (queue:board_square list) (pos_list:position list) board= 
+  let rec bfs (connected:position list) (visited:position list) 
+      (queue:board_square list) (pos_list:position list) board= 
     match queue with 
     |{pos = p; occ = Some tile}::t ->
       (* Check that there is > 0 elements within 1 square of the square
          being visited*)
-      let neigh_list = List.filter (fun el -> (List.mem el visited) = false) (get_neighbors p pos_list) in 
+      let neigh_list = List.filter (fun el -> (List.mem el visited) = false)
+          (get_neighbors p pos_list) in 
       let neigh_squares = List.map (fun pos -> get_square pos board) neigh_list in 
       bfs (neigh_list @ connected) (p::visited) (neigh_squares@t) pos_list board
     |{pos = p; occ = _ }::t -> bfs connected (p::visited) t pos_list board
@@ -187,14 +190,14 @@ let first_letter_squares_col (board:t) =
       then loop t (p::acc) board else loop t acc board in 
   loop board [] board 
 
-(** comparison function for sorting squares by the x coordinate of their 
-    position*)
+(** [comp_squares_x square1 square2] returns 0 if two board squares have the 
+    same x, 1 if square1>square2 x and -1 otherwise*)
 let comp_squares_x square1 square2 =
   if get_x square1 = get_x square2 then 0
   else if get_x square1 > get_x square2 then 1 else -1
 
-(** comparison function for sorting squares by the y coordinate of their 
-    position*)
+(** [comp_squares_y square1 square2] returns 0 if two board squares have the 
+    same y, 1 if square1>square2 y and -1 otherwise*)
 let comp_squares_y square1 square2 =
   if get_y square1 = get_y square2 then 0
   else if get_y square1 > get_y square2 then -1 else 1
@@ -217,8 +220,8 @@ let find_word_row (first_letter_pos:position) (board:t)=
   * used, and false otherwise.  *)
 let was_premium_used (p:position) = 
   match Hashtbl.find_opt used_premiums p with
-  | None -> true
-  | Some x -> false
+  | None -> false
+  | Some x -> true
 
 (** [find_word_mul_row pos board] finds the horizontal word starting at [pos] of 
     [board] and their associated multiplier*)
@@ -231,19 +234,19 @@ let find_word_mul_row (first_letter_pos:position) (board:t) =
     |{pos = (x, _); occ = _}::t when x < c -> loop t c acc
     |{pos = p; occ = Some tile}::t -> 
       if ((was_premium_used p)=false) then 
-        (print_string "premium wasn't previously used \n";
-         add_tile_to_used_premiums used_premiums p;
-         if (List.mem p premiums.dl) then
-           loop t c ((tile,"dl")::acc)
-         else if (List.mem p premiums.dw) then
-           loop t c ((tile, "dw")::acc)
-         else if (List.mem p premiums.tl) then
-           loop t c ((tile, "tl")::acc)
-         else (*if (List.mem p premiums.tw) then *)
-           loop t c ((tile, "tw")::acc))
-      else (print_string "in else statement";
-            flush stdout;
-            Unix.sleep 1;loop t c ((tile, "")::acc))
+        (
+          add_tile_to_used_premiums p;
+          if (List.mem p premiums.dl) then
+            loop t c ((tile,"dl")::acc)
+          else if (List.mem p premiums.dw) then
+            loop t c ((tile, "dw")::acc)
+          else if (List.mem p premiums.tl) then
+            loop t c ((tile, "tl")::acc)
+          else if (List.mem p premiums.tw) then 
+            loop t c ((tile, "tw")::acc)
+          else 
+            loop t c ((tile, "")::acc) ) 
+      else loop t c ((tile, "")::acc)
     |{pos = (x, _); occ = None}::t -> acc
     |[] -> acc 
   in loop sorted_row col_ind []
@@ -274,18 +277,19 @@ let find_word_mul_column (first_letter_pos:position) (board:t)=
     |{pos = p; occ = Some tile}::t ->    
       if ((was_premium_used p)=false) then 
         (print_string "premium wasn't previously used \n";
-         add_tile_to_used_premiums used_premiums p;
+         add_tile_to_used_premiums p;
          if (List.mem p premiums.dl) then
            loop t r ((tile,"dl")::acc)
          else if (List.mem p premiums.dw) then
            loop t r ((tile, "dw")::acc)
          else if (List.mem p premiums.tl) then
            loop t r ((tile, "tl")::acc)
-         else (*if (List.mem p premiums.tw) then *)
-           loop t r ((tile, "tw")::acc))
-      else (print_string "in else statement";
-            flush stdout;
-            Unix.sleep 1;loop t r ((tile, "")::acc))
+         else if (List.mem p premiums.tw) then 
+           loop t r ((tile, "tw")::acc)
+         else 
+           loop t r ((tile, "")::acc))
+      else (
+        loop t r ((tile, "")::acc))
     |{pos = (_, x); occ = None}::t -> acc
     |[] -> acc 
   in loop sorted_col row_ind []
@@ -401,7 +405,8 @@ let check_words (board) =
   check_word_list_from_board_col board && check_word_list_from_board_row board
 
 let is_valid_board (board:t) = 
-  let word_list = (word_list_from_board_row board) @ (word_list_from_board_col board) in
+  let word_list = (word_list_from_board_row board) @ 
+                  (word_list_from_board_col board) in
   let row_num = List.length (get_board_row 1 board) in  
   let col_num = List.length (get_board_col 1 board) in 
   let center_pos = (col_num/2 + 1, row_num/2 +1 ) in
@@ -423,10 +428,14 @@ let bsquare_tostring bsquare =
 (*Gets the color the tile should print at.*)
 let get_bsquare_color bsquare = 
   let pos = bsquare.pos in
-  if List.mem pos premiums.dl then [ANSITerminal.on_cyan;ANSITerminal.black;Bold]
-  else if List.mem pos premiums.tl  then [ANSITerminal.on_blue;ANSITerminal.black;Bold]
-  else if List.mem pos premiums.dw then [ANSITerminal.on_magenta;ANSITerminal.black;Bold]
-  else if List.mem pos premiums.tw then [ANSITerminal.on_red;ANSITerminal.black;Bold]
+  if List.mem pos premiums.dl then 
+    [ANSITerminal.on_cyan;ANSITerminal.black;Bold]
+  else if List.mem pos premiums.tl  then 
+    [ANSITerminal.on_blue;ANSITerminal.black;Bold]
+  else if List.mem pos premiums.dw then 
+    [ANSITerminal.on_magenta;ANSITerminal.black;Bold]
+  else if List.mem pos premiums.tw then 
+    [ANSITerminal.on_red;ANSITerminal.black;Bold]
   else [ANSITerminal.white;ANSITerminal.black]
 
 (** [is_cursor_pos] returns a list of ANSITerminal.style styles used to print
@@ -582,8 +591,7 @@ let bsquares_to_chars (board:t) :(char list) =
   bsquares_to_chars_helper [] board
 
 let tiles_to_chars (tiles:tile list) : char list = tiles
-(**Returns a new dictionary of all words that could be made with the current
-   [inv] and [board] *)
+
 let possible_words_dict inv board = 
   let clist = List.append (tiles_to_chars inv) (bsquares_to_chars board) in
   let f s _ acc = (if (Dictionary.filter_func clist s) then s::acc else acc) in 
@@ -604,4 +612,20 @@ let get_y_pos pos = snd pos
 let get_right_pos pos = ((fst pos + 1), snd pos)
 
 let get_down_pos pos = (fst pos, snd pos - 1)
+
+let are_all_connected_row bs_lst = 
+  let sorted = List.sort comp_squares_x bs_lst in
+  let rev_sorted = List.rev sorted in 
+  let len = List.length bs_lst in
+  let hd = List.hd sorted in
+  let tl = List.hd rev_sorted in 
+  (get_x tl) - (get_x hd) = (len - 1)
+
+let are_all_connected_col bs_lst = 
+  let sorted = List.sort comp_squares_y bs_lst in
+  let rev_sorted = List.rev sorted in 
+  let len = List.length bs_lst in
+  let hd = List.hd sorted in
+  let tl = List.hd rev_sorted in 
+  (get_y hd) - (get_y tl) = (len - 1)
 
