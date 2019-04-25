@@ -233,20 +233,20 @@ let find_word_mul_row (first_letter_pos:position) (board:t) =
     match lst with 
     |{pos = (x, _); occ = _}::t when x < c -> loop t c acc
     |{pos = p; occ = Some tile}::t -> 
-      if ((was_premium_used p)=false) then 
+      (*if ((was_premium_used p)=false) then 
         (
-          add_tile_to_used_premiums p;
-          if (List.mem p premiums.dl) then
-            loop t c ((tile,"dl")::acc)
-          else if (List.mem p premiums.dw) then
-            loop t c ((tile, "dw")::acc)
-          else if (List.mem p premiums.tl) then
-            loop t c ((tile, "tl")::acc)
-          else if (List.mem p premiums.tw) then 
-            loop t c ((tile, "tw")::acc)
-          else 
-            loop t c ((tile, "")::acc) ) 
-      else loop t c ((tile, "")::acc)
+          add_tile_to_used_premiums p;*)
+      if (List.mem p premiums.dl) then
+        loop t c ((tile,"dl")::acc)
+      else if (List.mem p premiums.dw) then
+        loop t c ((tile, "dw")::acc)
+      else if (List.mem p premiums.tl) then
+        loop t c ((tile, "tl")::acc)
+      else if (List.mem p premiums.tw) then 
+        loop t c ((tile, "tw")::acc)
+      else 
+        loop t c ((tile, "")::acc)  
+    (*else loop t c ((tile, "")::acc)*)
     |{pos = (x, _); occ = None}::t -> acc
     |[] -> acc 
   in loop sorted_row col_ind []
@@ -275,21 +275,21 @@ let find_word_mul_column (first_letter_pos:position) (board:t)=
     match lst with 
     |{pos = (_, x); occ = _}::t when x > r -> loop t r acc
     |{pos = p; occ = Some tile}::t ->    
-      if ((was_premium_used p)=false) then 
+      (*if ((was_premium_used p)=false) then 
         (print_string "premium wasn't previously used \n";
-         add_tile_to_used_premiums p;
-         if (List.mem p premiums.dl) then
-           loop t r ((tile,"dl")::acc)
-         else if (List.mem p premiums.dw) then
-           loop t r ((tile, "dw")::acc)
-         else if (List.mem p premiums.tl) then
-           loop t r ((tile, "tl")::acc)
-         else if (List.mem p premiums.tw) then 
-           loop t r ((tile, "tw")::acc)
-         else 
-           loop t r ((tile, "")::acc))
-      else (
-        loop t r ((tile, "")::acc))
+         add_tile_to_used_premiums p;*)
+      if (List.mem p premiums.dl) then
+        loop t r ((tile,"dl")::acc)
+      else if (List.mem p premiums.dw) then
+        loop t r ((tile, "dw")::acc)
+      else if (List.mem p premiums.tl) then
+        loop t r ((tile, "tl")::acc)
+      else if (List.mem p premiums.tw) then 
+        loop t r ((tile, "tw")::acc)
+      else 
+        loop t r ((tile, "")::acc)
+    (*else (
+      loop t r ((tile, "")::acc))*)
     |{pos = (_, x); occ = None}::t -> acc
     |[] -> acc 
   in loop sorted_col row_ind []

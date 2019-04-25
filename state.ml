@@ -262,19 +262,14 @@ let end_turn state =
   let id = curr_player.player_id in 
   let next = next_player id state.players in 
   if is_valid_board merged_board = true then 
-    if ((same_y (List.hd curr_board) state.curr_turn) && 
-        are_all_connected_row curr_board) 
-    || ((same_x (List.hd curr_board) state.curr_turn) && 
-        are_all_connected_col curr_board) then 
-      let new_data = replenish_inventory state in
-      let new_players = fst new_data in 
-      let new_bag = snd new_data in 
-      {players = new_players; 
-       board = merged_board;
-       curr_turn = {curr_player = next; new_squares = []};
-       tile_bag = new_bag;
-       cursor = make_pos 8 8;} 
-    else raise MisplacedTile
+    let new_data = replenish_inventory state in
+    let new_players = fst new_data in 
+    let new_bag = snd new_data in 
+    {players = new_players; 
+     board = merged_board;
+     curr_turn = {curr_player = next; new_squares = []};
+     tile_bag = new_bag;
+     cursor = make_pos 8 8;} 
   else 
     {state with 
      curr_turn = {curr_player = get_player_from_id id state.players;
@@ -337,6 +332,7 @@ let get_state_word_diff old_state new_state =
 let get_state_score_diff old_state new_state = 
   get_board_score old_state.board new_state.board
 
+(**Returns a comma-seperated string of words in [word_lst]*)
 let rec word_list_to_string word_lst = 
   match word_lst with 
   |[] -> ""

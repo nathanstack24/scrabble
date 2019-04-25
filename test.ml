@@ -131,6 +131,15 @@ let make_board_word_diff_tests
                            expected_output 
                            (get_board_word_diff old_board new_board)))
 
+let make_possible_words_tests
+    (name:string)
+    (board:Board.t)
+    (inv:Board.tile list)
+    (expected_output: string list) : test = 
+  name >:: (fun _ -> 
+      assert_equal true (cmp_unordered_lists
+                           expected_output 
+                           (possible_words_dict inv board)))
 
 let board_tests = [
   make_get_pos_tests "get pos 1, 1" square11emp pos11;
@@ -170,6 +179,8 @@ let board_tests = [
   make_board_word_diff_tests "5x5 cab -> cab ab be be word diff" 
     board5x5cab board5x5cabbe
     ["AB"; "BE"; "BE"];
+
+  make_possible_words_tests "possible words 1" board5x5 [a;b] ["AB"; "BA"];
 ]
 
 (* state test cases*)
@@ -209,17 +220,15 @@ let state_tests = [
       assert_equal [(1,0);(2,0)] (get_scores state_3));
 ]
 
-
 (* scrabble dictionary test cases *)
-let dict = create_dictionary
+let dict = Dictionary.dict
 
 let make_dict_tests  
     (name : string) 
     (word: string)
     (expected_output : bool) : test = 
   name >:: (fun _ -> 
-      assert_equal expected_output (Dict.mem word dict)) 
-
+      assert_equal expected_output (Hashtbl.mem dict (String.uppercase_ascii word))) 
 
 let dictionary_tests = [
   make_dict_tests "AA test" "AA" true;
@@ -231,7 +240,6 @@ let dictionary_tests = [
   make_dict_tests "ZZZS test" "ZZZS" true;
   make_dict_tests "ZZZZ test" "ZZZZ" false;
 ]
-
 
 (* tile values tests*)
 

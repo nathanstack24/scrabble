@@ -102,7 +102,8 @@ let rec get_next_command (player_id:int) (st:State.t) =
 let rec execute_command (st:State.t) : State.t =
   let player_id = get_curr_player_id st in 
   if is_player_bot player_id st then ( 
-    print_endline ("Player " ^ string_of_int (player_id) ^ "'s turn (Bot)") ;
+    print_endline ("Player " ^ string_of_int (player_id) ^ 
+                   " (Bot) is thinking") ;
     let new_st = State.end_turn (State.perfect_turn st) in
     let new_words = State.get_state_word_diff st new_st in
     let points = State.get_state_score_diff st new_st in
