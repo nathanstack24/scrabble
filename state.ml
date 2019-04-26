@@ -224,6 +224,11 @@ let rec replenish_inventory (board: t) : player list * tile list =
       (fun p -> p.player_id<>updated_player.player_id) board.players in 
   (List.sort comp_players (updated_player::players), new_bag)
 
+(*let rec swap_num_tiles (state:t) (num:int) = 
+  let player = board.curr_turn.curr_player in 
+  let new_data = from_bag_to_inv board.tile_bag player.inv in *)
+
+
 (** [get_player_from_id id player_list] returns the player in [player_list] 
   * with player id [id] *)
 let rec get_player_from_id id player_list= 

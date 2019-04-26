@@ -8,9 +8,13 @@ type command =
   | Help
   | Skip
   | Perfect 
+  (*| Swap of string*)
 
 (** The exception raised when a command is malformed*)
 exception Malformed
+
+(** The exception raised when the user tries to *)
+exception BadSwapNum
 
 (** The exception raised when a command is empty*)
 exception Empty

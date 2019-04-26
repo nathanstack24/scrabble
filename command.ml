@@ -8,10 +8,13 @@ type command =
   | Score
   | Help
   | Skip
-  | Perfect 
+  | Perfect
+  (* | Swap of string *)
+
 
 exception Empty
 exception Malformed
+exception BadSwapNum
 
 let rec clean_str (lst:string list) : (string list) =
   match lst with
@@ -33,6 +36,7 @@ let parse (str:string) (st:State.t) : command =
     | "help"::[] -> Help
     | "perfect"::[] -> Perfect
     | "skip"::[] -> Skip
+    (* | "swap"::n::[] -> Swap n *)
     | c::[] -> 
       let x = State.get_cursor_xpos st in 
       let y = State.get_cursor_ypos st in 

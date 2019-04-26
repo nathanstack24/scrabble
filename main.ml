@@ -300,6 +300,26 @@ let rec execute_command (st:State.t) : State.t =
          State.print_board_from_state st; 
          print_newline(); execute_command st)
 
+    (*| Command.Swap n -> 
+      (try 
+         let num = (int_of_string n) in 
+         if (num > 0 && num < 8) then 
+           (let new_st = swap_num_tiles num;
+              ANSITerminal.(print_string 
+                              [green] ("Swapped "^ 
+                                       (string_of_int num)^" tiles!"));
+              flush stdout;
+              Unix.sleep 2;
+              erase_above ();
+              State.print_board_from_state new_st; 
+              print_newline(); execute_command new_st)
+         else
+           raise Failure "Bad Swap Num"
+       with Failure _ -> 
+         ANSITerminal.(print_string [red] ("Please specify a" ^
+                                           " valid number of tiles to exchange (1-7)"));
+    *)
+
     |Command.Perfect -> let new_st = State.perfect_turn st in 
       erase_above ();
       State.print_board_from_state new_st; 
@@ -322,9 +342,8 @@ let parse_num_players (str: string) =
 
 (** [get_integer low upper str cursor] prints string [str] and then prompts 
     the user to input an integer which is only returned if it is between [low] 
-    and [upper] (non-inclusive). If the user types an invalid character, reset 
-    the cursor to position [cursor].  *)
-let rec get_integer low upper str cursor = 
+    and [upper] (non-inclusive).  *)
+let rec get_integer low upper str = 
   ANSITerminal.(print_string [blue] str );
   match read_line () with
   | exception End_of_file -> exit 1
@@ -338,7 +357,8 @@ let rec get_integer low upper str cursor =
         ("You must enter an integer between 1 and 4. Try again \n");
       flush stdout;
       Unix.sleep 1;
-      get_integer low upper str cursor
+      erase_above();
+      get_integer low upper str
 
 (** [get_num_bots low upper cursor] prompts the user to input an integer which is only
     returned if it is between [low] and [upper] (non-inclusive). If the user
@@ -373,8 +393,8 @@ let main () =
      ██║    ██║██╔════╝██║     ██╔════╝██╔═══██╗████╗ ████║██╔════╝
      ██║ █╗ ██║█████   ██║     ██║     ██║   ██║██╔████╔██║█████╗  
      ██║███╗██║██╔══╝  ██║     ██║     ██║   ██║██║╚██╔╝██║██╔══╝  
-      ███╔███╔╝ ██████╗ ███████╗██████╗╚██████╔╝██║ ══╝ ██║███████╗
-      ╚══╝╚══╝ ╚══════╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝ 
+      ███╔███╔╝ ██��███╗ ███████╗���███��█╗╚██████╔╝██║ ══╝ ██║███████╗
+      ╚══╝╚══╝ ╚══════╝╚══════╝ ╚══���══╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝ 
      \n");
   flush stdout;
   ANSITerminal.(print_string [red;Blink] "
@@ -388,8 +408,8 @@ let main () =
   flush stdout;
   ANSITerminal.(print_string [black;Blink] " 
    ███████╗ ██████╗██████╗  █████╗ ██████╗ ██████╗ ██╗     ███████╗
-   ██╔════╝██╔════╝██╔══██╗██╔══██╗██╔══██╗██╔�������������██╗██║     ██╔════╝
-   ███████╗██║     ██████╔╝███████║██████╔╝██████╔╝██║     █████╗  
+   ██╔════╝██╔════╝██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║     ██╔════╝
+   ███████ ██|     ██████╔╝███████║██████╔╝██████╔╝██║     █████╗  
    ╚════██║██║     ██╔══██╗██╔══██║██╔══██╗██╔══██╗██║     ██╔══╝  
    ███████║╚██████╗██║  ██║██║  ██║██████╔╝██████╔╝███████╗███████╗
    ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═════╝ ╚══════╝╚══════╝ 
@@ -404,7 +424,7 @@ let main () =
   erase_above();
   ANSITerminal.set_cursor 1 2;
   let player_num_string = "\n\nEnter total number of players (2-4): " in 
-  let player_num = get_integer 1 5 player_num_string (1,2)  in
+  let player_num = get_integer 1 5 player_num_string in
   let bot_num_string = "\n\nOf these, how many bots? (0-"
                        ^string_of_int (player_num-1)^ "): " in 
   ANSITerminal.print_string [ANSITerminal.blue] bot_num_string;
