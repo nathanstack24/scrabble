@@ -8,8 +8,6 @@ type command =
   | Help
   | Skip
   | Perfect 
-  (*| Legend
-    | PointValues*)
 
 (** The exception raised when a command is malformed*)
 exception Malformed

@@ -190,8 +190,6 @@ let place_tile (tile:tile) (pos:position) (state:t) =
 let remove_tile (pos:position) (board:t) = 
   let placed_squares = board.curr_turn.new_squares in 
   let player = board.curr_turn.curr_player in 
-  (** TODO: implement error handling with this case. Raises Not_Found if no
-      square placed by the user in this turn is located at pos *)
   let tile = List.find (fun square -> (get_pos square) = pos) placed_squares in
   let new_placed_squares = List.filter 
       (fun square -> (get_pos square)<>pos) placed_squares in 
@@ -241,7 +239,8 @@ let rec get_player_from_id id player_list=
   |h::t -> get_player_from_id id t
   |[] -> raise Not_found
 
-(** [next_player curr_id players] returns the next player. *)
+(** [next_player curr_id players] returns the next player (the player whose
+  * turn it is after the current player ends their turn). *)
 let rec next_player curr_id players = 
   let next_id = curr_id + 1 in 
   try get_player_from_id next_id players with
@@ -338,13 +337,6 @@ let get_state_score_diff (old_state:t) (new_state:t) (player:int) =
   let old_score = get_score_for_player old_state player in 
   new_score - old_score
 
-(**Returns a comma-seperated string of words in [word_lst]*)
-let rec word_list_to_string word_lst = 
-  match word_lst with 
-  |[] -> ""
-  |h::[] -> h
-  |h::t -> h ^ ", " ^ (word_list_to_string t)
-
 let rec place_word_right word pos state : t option= 
   match word with 
   |[] -> Some state
@@ -365,7 +357,6 @@ let rec place_word_down word pos state : t option=
       None
   |_ -> None
 
-(*Note: function takes in a list of positions on the board. *)
 let rec find_placements_helper word (state:t) (acc:t list) = function
   | [] -> acc
   | h::t -> match ((place_word_right word h state), 

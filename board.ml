@@ -45,7 +45,8 @@ let tl_list = [(2,6);(2,10);(6,2);(6,6);(6,10);(6,14);(10,2);(10,6);
                (10,10);(10,14);(14,6);(14,10);]
 
 let dw_list = [(2,2);(3,3);(4,4);(5,5);(8,8); (2,14);(3,13);(4,12);(5,11);
-               (11,11);(12,12);(13,13);(14,14);(11,5);(12,4);(13,3);(3,7);(14,2)]
+               (11,11);(12,12);(13,13);(14,14);(11,5);(12,4);(13,3);(3,7);
+               (14,2)]
 
 let tw_list = [(1,1);(1,15);(15,1);(15,15)]
 
@@ -72,14 +73,6 @@ let premiums : (position, premium_type) Hashtbl.t =
   add_to_premiums premiums_table TL tl_list;
   add_to_premiums premiums_table DW dw_list;
   add_to_premiums premiums_table TW tw_list;
-  (*let print_table p p_type : unit= 
-    print_tuple p;
-    print_string " : ";
-    print_premium_type p_type;
-    print_newline () in 
-    Hashtbl.iter print_table premiums_table;
-    flush stdout;
-    Unix.sleep 10;*)
   premiums_table
 
 let rec remove_tiles_from_premiums (b_squares: board_square list) = 
@@ -140,10 +133,12 @@ let connected_to_center (center_pos:position) (board:t)=
          being visited*)
       let neigh_list = List.filter (fun el -> (List.mem el visited) = false)
           (get_neighbors p pos_list) in 
-      let neigh_squares = List.map (fun pos -> get_square pos board) neigh_list in 
+      let neigh_squares = List.map
+          (fun pos -> get_square pos board) neigh_list in 
       bfs (neigh_list @ connected) (p::visited) (neigh_squares@t) pos_list board
     |{pos = p; occ = _ }::t -> bfs connected (p::visited) t pos_list board
-    |[] -> List.filter (fun pos -> get_occ (get_square pos board) <> None) connected
+    |[] -> List.filter 
+             (fun pos -> get_occ (get_square pos board) <> None) connected
   in bfs (center_pos::[]) [] ((get_square center_pos board)::[]) 
     (List.map (fun square -> get_pos square) board) board
 
@@ -177,6 +172,8 @@ let get_board_col c board =
     |h::t -> if get_x h = c then (loop c t (h::acc)) else loop c t acc
   in loop c board []
 
+(** [first_letter_squares_row board] returns the positions of the first letters
+    of each row word on the board*)
 let first_letter_squares_row (board:t) = 
   let rec loop (unvisited:board_square list) (acc:position list) (board:t)= 
     let col_num = List.length (get_board_row 1 board) in
@@ -316,16 +313,7 @@ let find_word_mul_column (first_letter_pos:position) (board:t)=
     |[] -> acc 
   in loop sorted_col row_ind []
 
-(** [print_pos] prints the position [pos] to the terminal*)
-let print_pos (pos:position) = 
-  (print_int (fst pos)); print_string " , ";  (print_int (snd pos))
-
-(** prints a list of positions*)
-let rec print_pos_list = function 
-    [] -> ()
-  | e::l -> print_pos e ; print_string " " ; print_pos_list l
-
-(** [remove_dups list acc] returns [list] with no duplicate entries*)
+(** [remove_dups list acc] returns [list] with no duplicate entries *)
 let rec remove_dups lst acc = 
   match lst with
   |[] -> acc
@@ -447,7 +435,9 @@ let bsquare_tostring bsquare =
   | Some ti -> (String.make 1 ti)
   | None -> if bsquare.pos<>(8,8) then "#" else "*"
 
-(*Gets the color the tile should print at.*)
+(** [get_bsquare_color bsquare] returns a list of [ANSITerminal.style] elements
+  * which determine how board square is printed. If [bsquare] is a bonus tile,
+  * it is printed with a special background color and it is printed in bold. *)
 let get_bsquare_color bsquare = 
   let pos = bsquare.pos in
   let bonus = find_premium_val pos in 
@@ -466,15 +456,57 @@ let get_bsquare_color bsquare =
 let is_cursor_pos (b:board_square) (cursor:position) : ANSITerminal.style list = 
   if b.pos=cursor then [ANSITerminal.Blink; ANSITerminal.on_yellow] else []
 
+(** [print_tile_details row] prints the tile details corresponding to
+  * [row] *)
+let print_tile_values (row: int) = 
+  ANSITerminal.set_cursor 90 (3 + (15-row));
+  match row with 
+  | 14 -> print_string "1 point letters: ";
+    ANSITerminal.(print_string [green] "A, E, I, O, N, R, T, L, S, U"); 
+  | 12 -> print_string "2 point letters: ";
+    ANSITerminal.(print_string [green] "D, G"); 
+  | 10 -> print_string "3 point letters: ";
+    ANSITerminal.(print_string [green] "B, C, M, P"); 
+  | 8 -> print_string "4 point letters: ";
+    ANSITerminal.(print_string [green] "F, H, V, W, Y"); 
+  | 6 ->print_string "5 point letter: ";
+    ANSITerminal.(print_string [green] "K"); 
+  | 4 ->print_string "8 point letters: ";
+    ANSITerminal.(print_string [green] "J, X"); 
+  | 2 ->print_string "10 point letters: ";
+    ANSITerminal.(print_string [green] "Q, Z"); 
+  | _ -> ()
 
-(* Prints the given list of board_squares IN ORDER to the console. *)
-let rec print_ordered_row (lst:board_square list) (cursor:position) = 
+(** [print_legend_details row] prints the legend details corresponding to
+  * [row] *)
+let print_legend_details (row:int) = 
+  ANSITerminal.set_cursor 40 (3 + (15-row));
+  match row with 
+  | 14 -> ANSITerminal.(print_string [on_yellow] " "); 
+    print_string " : the current position of the cursor"
+  | 12 ->ANSITerminal.(print_string [on_cyan] " "); 
+    print_string " : double letter tile"
+  | 10 ->ANSITerminal.(print_string [on_magenta] " "); 
+    print_string " : double word tile"
+  | 8 ->ANSITerminal.(print_string [on_blue] " "); 
+    print_string " : triple letter tile"
+  | 6 ->ANSITerminal.(print_string [on_red] " "); 
+    print_string " : triple word tile"
+  | _ -> ()
+
+(** [print_ordered_row lst cursor row] prints the row of board
+  * squares denoted by row number [row]. If this row contains the board square
+  * on which the cursor lies (i.e. the board square with position [cursor]), 
+  * that boardsquare is printed with a yellow background.
+  * *)
+let rec print_ordered_row (lst:board_square list) (cursor:position) (row:int) = 
   match lst with 
   | h::t -> print_string "|"; 
     ANSITerminal.print_string ((get_bsquare_color h)@(is_cursor_pos h cursor))
       (bsquare_tostring h); 
-    print_ordered_row t cursor
-  | _ -> print_endline "|"
+    print_ordered_row t cursor row
+  | _ -> print_string "|"; print_legend_details row; print_tile_values row;
+    print_newline()
 
 (** [print_row_num num] prints the given row number to the console. Called 
   * before printing each row of the Scrabble board. *)
@@ -482,22 +514,16 @@ let print_row_num num =
   if (num < 10) then print_string (" " ^(string_of_int num))
   else print_string (string_of_int num)
 
-(** [print_col_num num stop] prints the given column number [num] to the console 
-  * unless the stop condition [num]=[stop] is met. Called after the entire 
-  * Scrabble board has been printed. *)
-let rec print_col_num (num:int) (stop:int) = 
-  if (num=stop) then print_newline () else
-    print_string ((string_of_int num) ^ " ");
-  print_col_num (num+1) stop
-
-(** [print_board_helper board rowcounter] prints each of the rows on the Scrabble
-  * board [board] with corresponding row identifier [row_counter]. When [rowcounter]
-  * reaches zero, all rows of the Scrabble board have been printed. *)
+(** [print_board_helper board rowcounter] prints each of the rows on the 
+  * Scrabble board [board] with corresponding row identifier [row_counter]. 
+  * When [rowcounter] reaches zero, all rows of the Scrabble board have been
+  * printed. *)
 let rec print_board_helper (board:t) (rowcounter:int) (cursor: position) = 
   if rowcounter = 0 then ()
   else (
     print_row_num rowcounter;
-    print_ordered_row (List.sort comp_squares_x (get_board_row rowcounter board)) cursor; 
+    print_ordered_row (List.sort comp_squares_x 
+                         (get_board_row rowcounter board)) cursor rowcounter; 
     print_board_helper board (rowcounter - 1) cursor; ())
 
 (** [make_x_coord_string col_num] returns the string of integers to be printed
@@ -508,14 +534,20 @@ let rec make_x_coord_string col_num =
   if col_num = 0 then "" else  make_x_coord_string (col_num-1)^ " " ^ 
                                (String.make 1 last_dig)
 
-(*Main functionality is in helper. This simply sets the row counter to 1 and 
-  lets the helper do the main work. *)
 let print_board (board:t) (cursor:position) : unit = 
-  ANSITerminal.(print_string [red] "The board:\n");
+  ANSITerminal.(print_string [red] "The board:");
+  ANSITerminal.set_cursor 40 2;
+  ANSITerminal.(print_string [red] "The legend:");
+  ANSITerminal.set_cursor 90 2;
+  ANSITerminal.(print_string [red] "The tile values:\n");
   let n = (List.length (get_board_row 1 board)) in 
   print_board_helper board n cursor;
-  print_string ("  " ^ (make_x_coord_string n))
-
+  print_string ("  " ^ (make_x_coord_string n)); 
+  let cursor_y = snd (ANSITerminal.pos_cursor ()) in 
+  ANSITerminal.set_cursor 40 cursor_y;
+  ANSITerminal.(print_string [red] 
+                  ("Press enter, type 'help', and then press enter again"^ 
+                   " for more details"))
 
 (** [new_board_helper r c n] defines a new list of empty board squares with 
     [r] rows and [c] columns. [n] = [c] allows the original value of [c] to 
@@ -528,8 +560,6 @@ let rec new_board_helper r c n: t =
 
 let new_board n : t = 
   new_board_helper n n n
-
-(* let rec new_board_helper acc n = ()*)
 
 let rec merge_boards (board1:board_square list) (board2:t) : t  = 
   match board1 with 
@@ -554,17 +584,21 @@ let make_tile (c:char) : tile =
   let range = 65 -- 90 in 
   if (List.mem code range) then c else raise InvalidChar
 
-let rec get_word_score (word_mul: (tile*string) list ) (n:int) (acc:int*int) : int = 
+let rec get_word_score (word_mul: (tile*string) list ) (n:int) (acc:int*int) = 
   if n = 0 then (fst acc * snd acc) else 
     let curr_char = fst (List.nth word_mul (n-1)) in
     let char_score = Values.find curr_char tile_values in
     let char_mul = snd (List.nth word_mul (n-1)) in
     let word_acc = fst acc in 
     let tot_mul = snd acc in 
-    if  char_mul = "dl" then get_word_score word_mul (n-1) ( (2*char_score + word_acc), tot_mul ) 
-    else if char_mul = "dw" then get_word_score word_mul (n-1) ((char_score+word_acc), tot_mul*2) 
-    else if char_mul = "tl" then get_word_score word_mul (n-1) (3*char_score + word_acc,  tot_mul) 
-    else if char_mul = "tw" then get_word_score word_mul (n-1) ((char_score + word_acc), tot_mul * 3) 
+    if  char_mul = "dl" then get_word_score word_mul (n-1) 
+        ( (2*char_score + word_acc), tot_mul ) 
+    else if char_mul = "dw" then get_word_score word_mul (n-1) 
+        ((char_score+word_acc), tot_mul*2) 
+    else if char_mul = "tl" then get_word_score word_mul (n-1) 
+        (3*char_score + word_acc,  tot_mul) 
+    else if char_mul = "tw" then get_word_score word_mul (n-1) 
+        ((char_score + word_acc), tot_mul * 3) 
     else get_word_score word_mul (n-1) (char_score + word_acc, tot_mul) 
 
 (** [remove_one_of elt lst acc] returns [lst] without one of [elt] if it is in 

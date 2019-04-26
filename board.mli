@@ -7,7 +7,7 @@ type tile
 (** The type representing a position on the board*)
 type position 
 
-(** The type representing a location *)
+(** The type representing a location on the scrabble board. *)
 type board_square
 
 (** Raised when the user attempts to place a tile on occupied [board_square] *)

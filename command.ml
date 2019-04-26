@@ -9,8 +9,6 @@ type command =
   | Help
   | Skip
   | Perfect 
-  (*| Legend
-    | PointValues*)
 
 exception Empty
 exception Malformed
@@ -35,8 +33,6 @@ let parse (str:string) (st:State.t) : command =
     | "help"::[] -> Help
     | "perfect"::[] -> Perfect
     | "skip"::[] -> Skip
-    (*| "legend"::[] -> Legend
-      | "point"::"values"::[] -> PointValues*)
     | c::[] -> 
       let x = State.get_cursor_xpos st in 
       let y = State.get_cursor_ypos st in 
