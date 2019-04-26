@@ -75,6 +75,10 @@ val end_turn : t -> t
   * next player (the current player decided to skip their turn). *)
 val skip_curr_turn : t -> t 
 
+(** [is_player_bot id state] returns whether the player with [id] in [state]
+    is a bot or not*)
+val is_player_bot : int -> t -> bool
+
 (** [get_cursor_xpos st] returns the x position of the cursor in state [st] *)
 val get_cursor_xpos : t -> int
 
@@ -122,25 +126,8 @@ val get_state_score_diff : t -> t -> int -> int
   * cursor position based on the cursor change indicated by [change]. *)
 val new_state_with_cursor_change : t -> cursor_change -> t 
 
-(*Use stuff from perfect_turn to find best state from state list*)
-val best_state: t list -> t -> t
-
-(**Takes in a list of words and a state, returns the state with the highest
-   point value*)
-val find_placements: string -> t -> t list 
-
-(**Places the word [string] on the board with the first letter at 
-   Board.position from right to left*)
-val place_word_right: Board.tile list -> Board.position -> t -> t option
-
-(**Places the word [string] on the board with the first letter at 
-   Board.position from top to bottom*)
-val place_word_down: Board.tile list -> Board.position -> t -> t option
-
-(** [perfect_turn state] places tiles in a way to maximize the number 
-    of points made while maintaining valid placemenets*)
+(** [perfect_turn state] returns the state with tiles placed in a way to 
+    maximize the number of points made while maintaining valid placemenets. 
+    This function is the basis of the AI *)
 val perfect_turn : t -> t
 
-(** [is_player_bot id state] returns whether the player with [id] in [state]
-    is a bot or not*)
-val is_player_bot : int -> t -> bool

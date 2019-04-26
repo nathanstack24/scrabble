@@ -301,8 +301,9 @@ let rec execute_command (st:State.t) : State.t =
          print_newline(); execute_command st)
 
     |Command.Perfect -> let new_st = State.perfect_turn st in 
-      print_newline(); State.print_board_from_state new_st;
-      print_newline(); execute_command (new_st))
+      erase_above ();
+      State.print_board_from_state new_st; 
+      print_newline(); execute_command new_st)
 
 
 (** [parse_num_players str] returns the integer entered by the user when
@@ -387,7 +388,7 @@ let main () =
   flush stdout;
   ANSITerminal.(print_string [black;Blink] " 
    ███████╗ ██████╗██████╗  █████╗ ██████╗ ██████╗ ██╗     ███████╗
-   ██╔════╝██╔════╝██╔══██╗██╔══██╗██╔══██╗██╔══██╗██║     ██╔════╝
+   ██╔════╝██╔════╝██╔══██╗██╔══██╗██╔══██╗██╔�������������██╗██║     ██╔════╝
    ███████╗██║     ██████╔╝███████║██████╔╝██████╔╝██║     █████╗  
    ╚════██║██║     ██╔══██╗██╔══██║██╔══██╗██╔══██╗██║     ██╔══╝  
    ███████║╚██████╗██║  ██║██║  ██║██████╔╝██████╔╝███████╗███████╗

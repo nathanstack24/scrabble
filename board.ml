@@ -37,17 +37,22 @@ let rec add_to_premiums (premiums: (position, premium_type) Hashtbl.t)
   | h::t -> Hashtbl.add premiums h premium; 
     add_to_premiums premiums premium t
 
+
+(** [dl_list] is a list of all of the positions of double letter squares*)
 let dl_list = [(1,4);(1,12);(3,7);(3,9);(4,1);(4,8);(4,15);(7,3);
                (7,7);(7,9);(7,13);(8,4); (8,12); (9,3);(9,7);(9,9);
                (9,13);(12,1);(12,8);(12,15);(13,7);(13,9);(15,4);(15,12)]
 
+(** [tl_list] is a list of all of the positions of triple letter squares*)
 let tl_list = [(2,6);(2,10);(6,2);(6,6);(6,10);(6,14);(10,2);(10,6);
                (10,10);(10,14);(14,6);(14,10);]
 
+(** [dw_list] is a list of all of the positions of double word squares*)
 let dw_list = [(2,2);(3,3);(4,4);(5,5);(8,8); (2,14);(3,13);(4,12);(5,11);
                (11,11);(12,12);(13,13);(14,14);(11,5);(12,4);(13,3);(3,7);
                (14,2)]
 
+(** [tw_list] is a list of all of the positions of double word squares*)
 let tw_list = [(1,1);(1,15);(15,1);(15,15)]
 
 let print_tuple (tup: position) =
@@ -388,6 +393,8 @@ let rec are_words_valid word_list dict =
     else are_words_valid t dict
   |[] -> true
 
+(** [check_word_list_from_board_col board] returns true if all of the vertical
+    placed words on a word are in the dictionary and false otherwise*)
 let check_word_list_from_board_col (board:t) = 
   let first_letters = first_letter_squares_col board in
   let rec loop pos_list board = 
@@ -400,6 +407,8 @@ let check_word_list_from_board_col (board:t) =
       else loop t board
   in loop first_letters board
 
+(** [check_word_list_from_board_col board] returns true if all of the horizontal
+    placed words on a word are in the dictionary and false otherwise*)
 let check_word_list_from_board_row (board:t) = 
   let first_letters = remove_dups (first_letter_squares_row board) [] in
   let rec loop pos_list board = 
@@ -639,16 +648,19 @@ let get_board_word_diff old_board new_board =
     |[] -> []
   in loop new_words
 
+(** [bsquares_to_chars_helper acc bs_lst] returns the tiles placed on [bs_list]*)
 let rec bsquares_to_chars_helper (acc:char list) = function
   | [] -> acc
   | h::t -> match h.occ with 
     |Some c -> bsquares_to_chars_helper (c::acc) t
     |None -> bsquares_to_chars_helper acc t
 
-(**Take a board [board] and return the list of chars on that board *)
+(**[bsquares_to_chars board] returns the list of chars placed on [board]*)
 let bsquares_to_chars (board:t) :(char list) = 
   bsquares_to_chars_helper [] board
 
+(** [tiles_to_chars tiles] returns the chars associated with each tile in 
+    [tiles]*)
 let tiles_to_chars (tiles:tile list) : char list = tiles
 
 let possible_words_dict inv board = 

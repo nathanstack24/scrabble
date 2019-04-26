@@ -17,7 +17,6 @@ let rec read_channel channel acc =
   with  
     End_of_file -> Pervasives.close_in channel; acc
 
-
 (** [parse_text l] returns a string list, where each element of the 
  * list is a single word from the Scrabble dictionary text file.
  * 
@@ -30,10 +29,7 @@ let parse_text (l: string list) =
   words
 
 (** [add_words_to_dict list txt acc] returns a set with every word in   
-  * list [word] added to the set [acc] (which is our Scrabble dictionary). 
-  * Requires: - [list] is a string list where each element is a word in
-  *             text file "scrabble_dict.txt".
-  *           - [acc] is a   *)
+  * list [word] added to the set [acc] (which is our Scrabble dictionary). *)
 let rec add_words_to_dict (words: string list) = 
   match words with 
   | [] -> ()
@@ -113,8 +109,8 @@ let init_tile_bag =
   let acc = (add_tile_num_times 'Q' 1 []) @ acc in
   (add_tile_num_times 'Z' 1 []) @ acc
 
-(**Removes the first occurence of [c], returns the list with that occurence 
-   removed*)
+(**[remove_occ c char_list] returns [char_list] without the first occurence of 
+   [c]*)
 let rec remove_occ c = function
   | h::t -> if h = c then t else h::(remove_occ c t)
   |[] -> []

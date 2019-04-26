@@ -206,9 +206,10 @@ let board_tests = [
 ]
 
 (* state test cases*)
-let state_init = init_state 2 0
+let state_init = init_state 3 1
 let state_2 = State.end_turn state_init
 let state_3 = State.end_turn state_2
+let state_4 = State.skip_curr_turn state_3
 
 let bad_state_1 = fun () -> init_state 1 0
 let bad_state_0 = fun () -> init_state 0 0 
@@ -236,10 +237,14 @@ let state_tests = [
 
   make_get_curr_player_tests "init player id" state_init 1;
   make_get_curr_player_tests "endturn player id" state_2 2;
-  make_get_curr_player_tests "2*endturn player id" state_3 1;
+  make_get_curr_player_tests "2*endturn id" state_3 3;
+  make_get_curr_player_tests "skip player id" state_4 1;
 
   "get_scores test" >:: (fun _ -> 
-      assert_equal [(1,0);(2,0)] (get_scores state_3));
+      assert_equal [(1,0);(2,0);(3,0)] (get_scores state_3));
+
+  "get_score_for_player test" >:: (fun _ ->
+      assert_equal 0 (get_score_for_player state_init 2 ) )
 ]
 
 (* scrabble dictionary test cases *)
@@ -250,7 +255,8 @@ let make_dict_tests
     (word: string)
     (expected_output : bool) : test = 
   name >:: (fun _ -> 
-      assert_equal expected_output (Hashtbl.mem dict (String.uppercase_ascii word))) 
+      assert_equal expected_output (Hashtbl.mem dict 
+                                      (String.uppercase_ascii word))) 
 
 let dictionary_tests = [
   make_dict_tests "AA test" "AA" true;
